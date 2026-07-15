@@ -97,7 +97,8 @@ function parseSheetRows(rows) {
 }
 
 async function fetchSheetSchedule() {
-  const res = await fetch(SHEET_CSV_URL);
+  const bustUrl = SHEET_CSV_URL + "&_cb=" + Date.now();
+  const res = await fetch(bustUrl, { cache: "no-store" });
   if (!res.ok) throw new Error("HTTP " + res.status);
   const text = await res.text();
   const parsed = Papa.parse(text, { skipEmptyLines: false });
