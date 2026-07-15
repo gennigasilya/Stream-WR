@@ -38,7 +38,7 @@ const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 
 const SHEET_ID = "1WmWYWnrkjyxzAbUoGU9sv7FYonnWlWwswtBufposvXQ";
 const SHEET_GID = "1310328416";
-const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
+const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 
 const SHEET_GAME_CODE_MAP = {
   TR: "TalesRunner",
@@ -84,6 +84,11 @@ async function fetchSheetSchedule() {
   const parsed = Papa.parse(text, { skipEmptyLines: false });
   const entries = parseSheetRows(parsed.data);
   if (entries.length === 0) throw new Error("no rows parsed");
+  const dateRe = /^\d{2}\/\d{2}\/\d{4}$/;
+  const validDateCount = entries.filter((e) => dateRe.test(e.date || "")).length;
+  if (validDateCount < entries.length * 0.9) {
+    throw new Error("รูปแบบวันที่จากชีทเปลี่ยนไป (ไม่ตรง DD/MM/YYYY) — ยกเลิกการซิงค์เพื่อป้องกันตารางว่าง");
+  }
   return entries;
 }
 
@@ -178,6 +183,40 @@ function rangesOverlap(t1, t2) {
   }
 }
 
+async function storageGet(key, shared) {
+  if (typeof window !== "undefined" && window.storage && typeof window.storage.get === "function") {
+    try {
+      return await window.storage.get(key, shared);
+    } catch (e) {
+      // fall through to localStorage
+    }
+  }
+  try {
+    const raw = window.localStorage.getItem((shared ? "shared:" : "priv:") + key);
+    if (raw === null) return null;
+    return { key, value: raw, shared: !!shared };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function storageSet(key, value, shared) {
+  if (typeof window !== "undefined" && window.storage && typeof window.storage.set === "function") {
+    try {
+      const res = await window.storage.set(key, value, shared);
+      if (res) return res;
+    } catch (e) {
+      // fall through to localStorage
+    }
+  }
+  try {
+    window.localStorage.setItem((shared ? "shared:" : "priv:") + key, value);
+    return { key, value, shared: !!shared };
+  } catch (e) {
+    return null;
+  }
+}
+
 function useStorage() {
   const [schedule, setSchedule] = React.useState(null);
   const [streamers, setStreamers] = React.useState(null);
@@ -193,23 +232,23 @@ function useStorage() {
     (async () => {
       let sc = null, st = null, av = null, ph = null, lastSyncedCached = null;
       try {
-        const r = await window.storage.get("schedule_v1", false);
+        const r = await storageGet("schedule_v1", false);
         if (r && r.value) sc = JSON.parse(r.value);
       } catch (e) {}
       try {
-        const r = await window.storage.get("streamers_v1", false);
+        const r = await storageGet("streamers_v1", false);
         if (r && r.value) st = JSON.parse(r.value);
       } catch (e) {}
       try {
-        const r = await window.storage.get("availability_v1", false);
+        const r = await storageGet("availability_v1", false);
         if (r && r.value) av = JSON.parse(r.value);
       } catch (e) {}
       try {
-        const r = await window.storage.get("streamer_photos_v1", true);
+        const r = await storageGet("streamer_photos_v1", true);
         if (r && r.value) ph = JSON.parse(r.value);
       } catch (e) {}
       try {
-        const r = await window.storage.get("last_synced_v1", false);
+        const r = await storageGet("last_synced_v1", false);
         if (r && r.value) lastSyncedCached = r.value;
       } catch (e) {}
       setSchedule(sc || RAW_SCHEDULE);
@@ -223,7 +262,7 @@ function useStorage() {
 
   const persist = React.useCallback(async (key, value, shared) => {
     try {
-      const res = await window.storage.set(key, JSON.stringify(value), !!shared);
+      const res = await storageSet(key, JSON.stringify(value), !!shared);
       if (!res) setSaveError(true);
     } catch (e) {
       setSaveError(true);
@@ -263,7 +302,7 @@ function useStorage() {
       const now = new Date().toISOString();
       setLastSynced(now);
       try {
-        await window.storage.set("last_synced_v1", now, false);
+        await storageSet("last_synced_v1", now, false);
       } catch (e) {}
       setSyncStatus("success");
     } catch (e) {
