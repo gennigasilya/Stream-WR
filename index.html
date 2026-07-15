@@ -58,6 +58,21 @@ const SHEET_NAME_FIX = {
   "เห็ดเน่าChannel🍄": "เห็ดเน่าChannel",
 };
 
+const THAI_MONTH_MAP = {
+  "มกราคม": 1, "ม.ค.": 1, "ม.ค": 1,
+  "กุมภาพันธ์": 2, "ก.พ.": 2, "ก.พ": 2,
+  "มีนาคม": 3, "มี.ค.": 3, "มี.ค": 3,
+  "เมษายน": 4, "เม.ย.": 4, "เม.ย": 4,
+  "พฤษภาคม": 5, "พ.ค.": 5, "พ.ค": 5,
+  "มิถุนายน": 6, "มิ.ย.": 6, "มิ.ย": 6,
+  "กรกฎาคม": 7, "ก.ค.": 7, "ก.ค": 7,
+  "สิงหาคม": 8, "ส.ค.": 8, "ส.ค": 8,
+  "กันยายน": 9, "ก.ย.": 9, "ก.ย": 9,
+  "ตุลาคม": 10, "ต.ค.": 10, "ต.ค": 10,
+  "พฤศจิกายน": 11, "พ.ย.": 11, "พ.ย": 11,
+  "ธันวาคม": 12, "ธ.ค.": 12, "ธ.ค": 12,
+};
+
 function normalizeSheetDate(raw) {
   if (!raw) return raw;
   const s = raw.trim();
@@ -71,9 +86,27 @@ function normalizeSheetDate(raw) {
   }
   // already DD/MM/YYYY
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  // D/M/YYYY without leading zeros
+  const slashMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    let year = Number(slashMatch[3]);
+    if (year > 2400) year -= 543;
+    return `${slashMatch[1].padStart(2, "0")}/${slashMatch[2].padStart(2, "0")}/${year}`;
+  }
   // ISO format YYYY-MM-DD
   const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  // Thai text date: "1 กรกฎาคม 2569" or "1 ก.ค. 2569" or "1ก.ค.2569"
+  const thaiMatch = s.match(/^(\d{1,2})\s*([ก-๙.]+)\s*(\d{4})$/);
+  if (thaiMatch) {
+    const day = thaiMatch[1].padStart(2, "0");
+    const month = THAI_MONTH_MAP[thaiMatch[2].trim()];
+    if (month) {
+      let year = Number(thaiMatch[3]);
+      if (year > 2400) year -= 543; // Buddhist Era -> Gregorian
+      return `${day}/${String(month).padStart(2, "0")}/${year}`;
+    }
+  }
   return s;
 }
 
@@ -98,7 +131,7 @@ function parseSheetRows(rows) {
 
 async function fetchSheetSchedule() {
   const bustUrl = SHEET_CSV_URL + "&_cb=" + Date.now();
-  const res = await fetch(bustUrl, { cache: "no-store" });
+  const res = await fetch(bustUrl);
   if (!res.ok) throw new Error("HTTP " + res.status);
   const text = await res.text();
   const parsed = Papa.parse(text, { skipEmptyLines: false });
@@ -1204,7 +1237,13 @@ function SyncBar({ syncStatus, lastSynced, syncErrorMsg, syncNow }) {
       <span className="sync-text">
         {syncStatus === "syncing" && "กำลังซิงค์ข้อมูลจาก Google Sheet..."}
         {syncStatus === "success" && `ซิงค์ล่าสุดจาก Google Sheet: ${fmtTime(lastSynced)}`}
-        {syncStatus === "error" && `ซิงค์ไม่สำเร็จ (ใช้ข้อมูลที่บันทึกไว้ล่าสุด: ${fmtTime(lastSynced)}) — ตรวจสอบว่าชีทแชร์เป็น "ทุกคนที่มีลิงก์ดูได้" แล้วลองใหม่`}
+        {syncStatus === "error" && (
+          <>
+            {`ซิงค์ไม่สำเร็จ (ใช้ข้อมูลที่บันทึกไว้ล่าสุด: ${fmtTime(lastSynced)}) — `}
+            <b>{syncErrorMsg || "ไม่ทราบสาเหตุ"}</b>
+            {` — ตรวจสอบว่าชีทแชร์เป็น "ทุกคนที่มีลิงก์ดูได้" แล้วลองใหม่`}
+          </>
+        )}
         {syncStatus === "idle" && "รอซิงค์ข้อมูล..."}
       </span>
       <button className="sync-btn" onClick={syncNow} disabled={syncStatus === "syncing"}>ซิงค์ตอนนี้</button>
