@@ -38,7 +38,7 @@ const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 
 const SHEET_ID = "1WmWYWnrkjyxzAbUoGU9sv7FYonnWlWwswtBufposvXQ";
 const SHEET_GID = "1310328416";
-const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
 
 const SHEET_GAME_CODE_MAP = {
   TR: "TalesRunner",
@@ -58,6 +58,25 @@ const SHEET_NAME_FIX = {
   "เห็ดเน่าChannel🍄": "เห็ดเน่าChannel",
 };
 
+function normalizeSheetDate(raw) {
+  if (!raw) return raw;
+  const s = raw.trim();
+  // gviz literal date object format: Date(2026,6,1)  (month is 0-indexed)
+  const gvizMatch = s.match(/^Date\((\d+),\s*(\d+),\s*(\d+)/);
+  if (gvizMatch) {
+    const y = gvizMatch[1];
+    const mo = String(Number(gvizMatch[2]) + 1).padStart(2, "0");
+    const d = String(gvizMatch[3]).padStart(2, "0");
+    return `${d}/${mo}/${y}`;
+  }
+  // already DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  // ISO format YYYY-MM-DD
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  return s;
+}
+
 function parseSheetRows(rows) {
   const dataRows = rows.slice(2); // skip blank spacer row + header row
   const entries = [];
@@ -68,7 +87,7 @@ function parseSheetRows(rows) {
     const time = (row[1] || "").trim();
     const game = (row[2] || "").trim();
     let streamer = (row[4] || "").trim();
-    if (dateRaw) currentDate = dateRaw;
+    if (dateRaw) currentDate = normalizeSheetDate(dateRaw);
     streamer = SHEET_NAME_FIX[streamer] || streamer;
     if (!time || !game) continue;
     const mapped = SHEET_GAME_CODE_MAP[game] || game;
