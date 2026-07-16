@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Streamer Schedule & Budget Manager</title>
+<title>Streamer Schedule &amp; Budget Manager</title>
 <style>
 :root {
   --bg: #faf6f0;
@@ -130,6 +130,20 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .legend .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 .legend .status-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -2px; }
 
+.game-filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.game-filter-chip {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.game-filter-chip[data-game-filter=""] { color: var(--text-dim); border-color: var(--border); }
+.game-filter-chip[data-game-filter=""].active { background: var(--accent); border-color: var(--accent); color: white; }
+
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-dow { text-align: center; font-size: 11px; color: var(--text-dim); padding-bottom: 4px; font-weight: 600; }
 .cal-cell {
@@ -150,6 +164,10 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .cal-cell .date-num { font-size: 12px; font-weight: 700; color: var(--text-dim); }
 .cal-cell.today .date-num { color: var(--accent); }
 .cal-cell .badges { display: flex; flex-wrap: wrap; gap: 3px; }
+.cal-cell .cal-names { display: flex; flex-direction: column; gap: 2px; }
+.cal-cell .cal-name-item { font-size: 11px; color: var(--text); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-cell .cal-name-item.tournament { color: var(--warning); font-weight: 700; }
+.cal-cell .cal-name-empty { font-size: 11px; color: var(--text-dim); }
 .game-badge {
   font-size: 10px;
   padding: 1px 6px;
@@ -280,11 +298,11 @@ details.game-summary .gs-totals { margin-left: auto; display: flex; gap: 16px; f
 </head>
 <body>
 <header class="topbar">
-  <h1>๐ฅ Streamer Manager</h1>
+  <h1>🎥 Streamer Manager</h1>
   <nav class="tabs" id="nav-tabs">
     <a href="#dashboard" data-route="dashboard">Dashboard</a>
-    <a href="#summary" data-route="summary">เธชเธฃเธธเธเธฃเธฒเธขเน€เธ”เธทเธญเธ</a>
-    <a href="#admin" data-route="admin">เธซเธฅเธฑเธเธเนเธฒเธ (Admin)</a>
+    <a href="#summary" data-route="summary">สรุปรายเดือน</a>
+    <a href="#admin" data-route="admin">หลังบ้าน (Admin)</a>
   </nav>
 </header>
 
@@ -292,6 +310,7 @@ details.game-summary .gs-totals { margin-left: auto; display: flex; gap: 16px; f
 
 <div id="modal-root"></div>
 <div id="toast-root"></div>
+
 
 <script>
 const SEED_DATA = {
@@ -4256,7 +4275,7 @@ const DB = (() => {
 
 
 const Calendar = (() => {
-  let state = { year: null, month: null, view: "month", weekAnchor: null };
+  let state = { year: null, month: null, view: "month", weekAnchor: null, gameFilter: null };
 
   function init() {
     const today = new Date();
@@ -4268,11 +4287,13 @@ const Calendar = (() => {
   }
 
   function dayEntriesSorted(dateISO) {
-    return DB.listScheduleByDate(dateISO).sort((a, b) => a.time.localeCompare(b.time));
+    let entries = DB.listScheduleByDate(dateISO);
+    if (state.gameFilter) entries = entries.filter((e) => e.gameId === state.gameFilter);
+    return entries.sort((a, b) => a.time.localeCompare(b.time));
   }
 
   function gameBadges(dateISO) {
-    const entries = DB.listScheduleByDate(dateISO);
+    const entries = dayEntriesSorted(dateISO);
     const byGame = {};
     entries.forEach((e) => {
       byGame[e.gameId] = (byGame[e.gameId] || 0) + 1;
@@ -4284,14 +4305,33 @@ const Calendar = (() => {
     }).join("");
   }
 
+  // When a single game is selected, list streamer names directly instead of a count badge.
+  function streamerNameList(dateISO) {
+    const entries = dayEntriesSorted(dateISO);
+    if (!entries.length) return `<div class="cal-name-empty">—</div>`;
+    return entries.map((e) => {
+      const s = DB.getStreamer(e.streamerId);
+      return `<div class="cal-name-item ${e.isTournament ? "tournament" : ""}">${e.isTournament ? "🏆 " : ""}${Util.escapeHtml(s ? s.name : "?")}</div>`;
+    }).join("");
+  }
+
   function renderLegend() {
-    const games = DB.listGames();
-    const gameDots = games.map((g) => `<span><span class="dot" style="background:${g.color}"></span>${Util.escapeHtml(g.name)}</span>`).join("");
     return `<div class="legend">
-      ${gameDots}
       <span><span class="status-swatch" style="background:rgba(239,68,68,0.35);border:1px solid var(--danger)"></span>ไม่ไลฟ์</span>
       <span><span class="status-swatch" style="background:rgba(184,134,11,0.35);border:1px solid var(--warning)"></span>🏆 มีทัวร์นาเมนต์ (ฟรี)</span>
     </div>`;
+  }
+
+  function renderGameFilter() {
+    const games = DB.listGames();
+    const allActive = !state.gameFilter;
+    const chips = [`<button class="game-filter-chip ${allActive ? "active" : ""}" data-game-filter="">ทั้งหมด</button>`]
+      .concat(games.map((g) => {
+        const active = state.gameFilter === g.id;
+        const style = active ? `background:${g.color};border-color:${g.color};color:#fff;` : `border-color:${g.color};color:${g.color};`;
+        return `<button class="game-filter-chip" data-game-filter="${g.id}" style="${style}">${Util.escapeHtml(g.name)}</button>`;
+      }));
+    return `<div class="game-filter-row">${chips.join("")}</div>`;
   }
 
   function renderMonthGrid(year, month) {
@@ -4309,7 +4349,9 @@ const Calendar = (() => {
       const hasTournament = dayEntriesSorted(dateISO).some((e) => e.isTournament);
       cells += `<div class="cal-cell status-${status} ${isToday}" data-date="${dateISO}">
         <div class="date-num">${d}${status === "no_live" ? `<span class="status-tag no_live"> · ไม่ไลฟ์</span>` : hasTournament ? `<span class="status-tag tournament"> · 🏆</span>` : ""}</div>
-        <div class="badges">${gameBadges(dateISO)}</div>
+        ${state.gameFilter
+          ? `<div class="cal-names">${streamerNameList(dateISO)}</div>`
+          : `<div class="badges">${gameBadges(dateISO)}</div>`}
       </div>`;
     }
     const dow = Util.DOW_TH.map((d) => `<div class="cal-dow">${d}</div>`).join("");
@@ -4372,6 +4414,7 @@ const Calendar = (() => {
             <button data-view="week" class="${state.view === "week" ? "active" : ""}">รายสัปดาห์</button>
           </div>
         </div>
+        ${renderGameFilter()}
         ${renderLegend()}
         ${state.view === "month" ? renderMonthGrid(state.year, state.month) : renderWeekGrid(state.weekAnchor)}
       </div>
@@ -4392,6 +4435,12 @@ const Calendar = (() => {
     container.querySelectorAll(".view-toggle button").forEach((b) => {
       b.addEventListener("click", () => {
         state.view = b.getAttribute("data-view");
+        render(container);
+      });
+    });
+    container.querySelectorAll(".game-filter-chip").forEach((b) => {
+      b.addEventListener("click", () => {
+        state.gameFilter = b.getAttribute("data-game-filter") || null;
         render(container);
       });
     });
