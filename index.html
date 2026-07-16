@@ -4035,6 +4035,46 @@ const SEED_DATA = {
                          "gameId":  "tosm",
                          "streamerId":  "s39",
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
+                     },
+                     {
+                         "id":  "e322",
+                         "date":  "2026-07-27",
+                         "time":  "21.00 - 23.00",
+                         "gameId":  "zone4",
+                         "streamerId":  "s19",
+                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
+                     },
+                     {
+                         "id":  "e323",
+                         "date":  "2026-07-28",
+                         "time":  "21.00 - 23.00",
+                         "gameId":  "zone4",
+                         "streamerId":  "s27",
+                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
+                     },
+                     {
+                         "id":  "e324",
+                         "date":  "2026-07-29",
+                         "time":  "21.00 - 23.00",
+                         "gameId":  "zone4",
+                         "streamerId":  "s65",
+                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
+                     },
+                     {
+                         "id":  "e325",
+                         "date":  "2026-07-30",
+                         "time":  "21.00 - 23.00",
+                         "gameId":  "zone4",
+                         "streamerId":  "s19",
+                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
+                     },
+                     {
+                         "id":  "e326",
+                         "date":  "2026-07-31",
+                         "time":  "21.00 - 23.00",
+                         "gameId":  "zone4",
+                         "streamerId":  "s45",
+                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      }
                  ],
     "dayStatus":  {
@@ -4796,7 +4836,13 @@ const Admin = (() => {
     const streamers = DB.listStreamers().slice().sort((a, b) => a.name.localeCompare(b.name));
     body.innerHTML = `
       <div class="card">
-        <div class="row between"><h2>Streamers (${streamers.length})</h2><button id="add-streamer">+ เพิ่ม Streamer</button></div>
+        <div class="row between">
+          <h2>Streamers (${streamers.length})</h2>
+          <div class="row" style="gap:6px;">
+            <button class="secondary small" id="reload-seed" title="โหลดตารางไลฟ์ล่าสุดที่ฝังไว้ในไฟล์นี้ใหม่ (ข้อมูลราคา/รูป/สถานะที่แก้ไว้จะหายไป)">↻ โหลดตารางไลฟ์ล่าสุด</button>
+            <button id="add-streamer">+ เพิ่ม Streamer</button>
+          </div>
+        </div>
         <table>
           <thead><tr><th></th><th>ชื่อ</th><th>เกมที่รับงาน</th><th></th></tr></thead>
           <tbody>
@@ -4823,6 +4869,13 @@ const Admin = (() => {
       </div>
     `;
 
+    body.querySelector("#reload-seed").addEventListener("click", async () => {
+      if (!confirm("โหลดตารางไลฟ์ล่าสุดที่ฝังไว้ในไฟล์นี้ใหม่?\n\nข้อมูลที่เคยแก้ไว้ทั้งหมด (ราคา, รูปภาพ, ช่วงเวลาที่สะดวก, สถานะไม่ไลฟ์/ทัวร์นาเมนต์) จะถูกล้างและแทนที่ด้วยข้อมูลตั้งต้น การกระทำนี้ย้อนกลับไม่ได้")) return;
+      await DB.resetToSeed();
+      state.editingStreamerId = null;
+      renderBody(body.closest("main"));
+      Util.showToast("โหลดข้อมูลล่าสุดแล้ว");
+    });
     body.querySelector("#add-streamer").addEventListener("click", () => {
       const name = prompt("ชื่อ Streamer:");
       if (!name || !name.trim()) return;
