@@ -162,7 +162,8 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .cal-cell.empty { background: transparent; border: none; cursor: default; }
 .cal-cell.status-no_live { border-color: var(--danger); background: rgba(239,68,68,0.08); }
 .cal-cell .date-num { font-size: 12px; font-weight: 700; color: var(--text-dim); }
-.cal-cell.today .date-num { color: var(--accent); }
+.cal-cell.today { border: 2px solid var(--accent-2); background: rgba(111,74,46,0.1); }
+.cal-cell.today .date-num { color: var(--accent-2); font-weight: 800; }
 .cal-cell .badges { display: flex; flex-wrap: wrap; gap: 3px; }
 .cal-cell .cal-names { display: flex; flex-direction: column; gap: 2px; }
 .cal-cell .cal-name-item { font-size: 11px; color: var(--text); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -184,7 +185,8 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .week-col { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; min-height: 100px; transition: border-color 0.15s; }
 .week-col:hover { border-color: var(--accent); }
 .week-col.status-no_live { border-color: var(--danger); background: rgba(192,57,43,0.06); }
-.week-col.today .week-col-header { color: var(--accent); }
+.week-col.today { border: 2px solid var(--accent-2); background: rgba(111,74,46,0.08); }
+.week-col.today .week-col-header { color: var(--accent-2); font-weight: 800; }
 .week-col-header { display: flex; flex-direction: column; gap: 2px; font-weight: 700; font-size: 13px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
 .week-event {
   background: var(--panel);
@@ -4129,9 +4131,16 @@ const Util = (() => {
   function escapeHtml(str) {
     return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
+  // "Today" is always computed in Thailand time (Asia/Bangkok, UTC+7), regardless of the
+  // viewer's own device timezone, so the highlighted date matches Thailand's clock.
   function todayISO() {
-    const d = new Date();
-    return toISODate(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(new Date());
+    const y = parts.find((p) => p.type === "year").value;
+    const m = parts.find((p) => p.type === "month").value;
+    const d = parts.find((p) => p.type === "day").value;
+    return `${y}-${m}-${d}`;
   }
   function avatarHTML(streamer, sizeClass) {
     const cls = "avatar-circle" + (sizeClass ? " " + sizeClass : "");
@@ -4936,13 +4945,13 @@ const Summary = (() => {
   const MANAGEMENT_FEE_RATE = 0.15;
   const VAT_RATE = 0.07;
 
-  // Client invoice: cost paid to streamers, plus management fee margin, plus VAT on top of that.
-  function computeInvoice(actualTotal) {
-    const managementFee = actualTotal * MANAGEMENT_FEE_RATE;
-    const beforeVat = actualTotal + managementFee;
+  // Client invoice: normal (non-discounted) rate as the base, plus management fee margin, plus VAT on top.
+  function computeInvoice(normalTotal) {
+    const managementFee = normalTotal * MANAGEMENT_FEE_RATE;
+    const beforeVat = normalTotal + managementFee;
     const vat = beforeVat * VAT_RATE;
     const grandTotal = beforeVat + vat;
-    return { actualTotal, managementFee, beforeVat, vat, grandTotal };
+    return { normalTotal, managementFee, beforeVat, vat, grandTotal };
   }
 
   function init() {
@@ -4993,7 +5002,7 @@ const Summary = (() => {
   function render(container) {
     init();
     const summary = computeMonthSummary(state.year, state.month);
-    const invoice = computeInvoice(summary.actualTotal);
+    const invoice = computeInvoice(summary.normalTotal);
     const monthTitle = `${Util.MONTH_NAMES_TH[state.month - 1]} ${state.year + 543}`;
 
     const gameSections = Object.values(summary.byGame)
@@ -5007,7 +5016,7 @@ const Summary = (() => {
             <td>฿${Util.fmtMoney(sb.normalTotal)}</td>
             <td>฿${Util.fmtMoney(sb.actualTotal)}</td>
           </tr>`).join("");
-        const gbInvoice = computeInvoice(gb.actualTotal);
+        const gbInvoice = computeInvoice(gb.normalTotal);
         return `<details class="game-summary">
           <summary>
             <span class="color-dot" style="background:${gb.game.color}"></span>
@@ -5021,7 +5030,7 @@ const Summary = (() => {
           </summary>
           <table style="margin-top:10px;">
             <tbody>
-              <tr><td>ต้นทุนที่จ่ายจริง (Streamer)</td><td style="text-align:right;">฿${Util.fmtMoney(gbInvoice.actualTotal)}</td></tr>
+              <tr><td>ยอดราคาปกติ (Streamer)</td><td style="text-align:right;">฿${Util.fmtMoney(gbInvoice.normalTotal)}</td></tr>
               <tr><td>Management Fee (${(MANAGEMENT_FEE_RATE * 100).toFixed(0)}%)</td><td style="text-align:right;">฿${Util.fmtMoney(gbInvoice.managementFee)}</td></tr>
               <tr><td>รวมก่อน VAT</td><td style="text-align:right;">฿${Util.fmtMoney(gbInvoice.beforeVat)}</td></tr>
               <tr><td>VAT (${(VAT_RATE * 100).toFixed(0)}%)</td><td style="text-align:right;">฿${Util.fmtMoney(gbInvoice.vat)}</td></tr>
@@ -5060,7 +5069,7 @@ const Summary = (() => {
         <h2>ยอดเรียกเก็บลูกค้า</h2>
         <table>
           <tbody>
-            <tr><td>ต้นทุนที่จ่ายจริง (Streamer)</td><td style="text-align:right;">฿${Util.fmtMoney(invoice.actualTotal)}</td></tr>
+            <tr><td>ยอดราคาปกติ (Streamer)</td><td style="text-align:right;">฿${Util.fmtMoney(invoice.normalTotal)}</td></tr>
             <tr><td>Management Fee (${(MANAGEMENT_FEE_RATE * 100).toFixed(0)}%)</td><td style="text-align:right;">฿${Util.fmtMoney(invoice.managementFee)}</td></tr>
             <tr><td><strong>รวมก่อน VAT</strong></td><td style="text-align:right;"><strong>฿${Util.fmtMoney(invoice.beforeVat)}</strong></td></tr>
             <tr><td>VAT (${(VAT_RATE * 100).toFixed(0)}%)</td><td style="text-align:right;">฿${Util.fmtMoney(invoice.vat)}</td></tr>
