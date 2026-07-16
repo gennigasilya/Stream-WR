@@ -219,19 +219,30 @@ th { color: var(--text-dim); font-weight: 600; font-size: 12px; }
 tr:last-child td { border-bottom: none; }
 
 .session-row {
-  display: grid;
-  grid-template-columns: 74px 76px 26px minmax(0, 1fr) 28px 64px;
-  align-items: center;
-  gap: 8px;
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
 }
 .session-row:last-child { border-bottom: none; }
 .session-row.is-tournament { background: rgba(184,134,11,0.06); }
+.session-row-main {
+  display: grid;
+  grid-template-columns: 74px 76px 26px minmax(0, 1fr) 28px 64px;
+  align-items: center;
+  gap: 8px;
+}
 .session-row .time { color: var(--text-dim); font-size: 12px; }
 .session-row .streamer-link { color: var(--text); font-weight: 600; text-decoration: none; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-row .streamer-link:hover { color: var(--accent); }
+.session-row-sub {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding-left: 208px;
+  margin-top: 2px;
+}
 .session-row .price { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-dim); font-size: 12px; }
 .session-row .price.free { color: var(--warning); font-weight: 700; }
 
@@ -4325,6 +4336,61 @@ const DB = (() => {
     return load();
   }
 
+  // Refreshes the schedule (dates/times/games/who's live) from the bundled sheet import,
+  // without touching Streamer profiles the admin has already filled in (prices, photo, availability).
+  // New streamer names found in the sheet are added; existing streamers are matched by name and left as-is.
+  // Per-entry tournament (free) flags are carried over when the same date+time+game+streamer still exists.
+  async function syncScheduleFromSeed() {
+    let seed;
+    if (typeof SEED_DATA !== "undefined") {
+      seed = SEED_DATA;
+    } else {
+      const res = await fetch("data/seed.json");
+      seed = await res.json();
+    }
+
+    const nameToId = {};
+    state.streamers.forEach((s) => { nameToId[s.name] = s.id; });
+    let addedStreamers = 0;
+    seed.streamers.forEach((seedS) => {
+      if (!nameToId[seedS.name]) {
+        const created = addStreamer(seedS.name);
+        nameToId[seedS.name] = created.id;
+        addedStreamers++;
+      }
+    });
+
+    const idToName = {};
+    state.streamers.forEach((s) => { idToName[s.id] = s.name; });
+    const oldTournamentKeys = new Set();
+    state.schedule.forEach((e) => {
+      if (!e.isTournament) return;
+      const name = idToName[e.streamerId];
+      if (!name) return;
+      oldTournamentKeys.add(`${e.date}|${e.time}|${e.gameId}|${name}`);
+    });
+
+    const seedIdToName = {};
+    seed.streamers.forEach((s) => { seedIdToName[s.id] = s.name; });
+
+    const oldCount = state.schedule.length;
+    state.schedule = seed.schedule.map((se) => {
+      const name = seedIdToName[se.streamerId];
+      const key = `${se.date}|${se.time}|${se.gameId}|${name}`;
+      return {
+        id: uid("e"),
+        date: se.date,
+        time: se.time,
+        gameId: se.gameId,
+        streamerId: nameToId[name],
+        program: se.program,
+        isTournament: oldTournamentKeys.has(key),
+      };
+    });
+    save();
+    return { addedStreamers, oldCount, newCount: state.schedule.length };
+  }
+
   return {
     load, save, get, uid,
     listGames, getGame, addGame, updateGame,
@@ -4332,7 +4398,7 @@ const DB = (() => {
     setPrice, deletePrice, getPrice, effectivePrice,
     listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
     getDayStatus, setDayStatus, getEntryCost,
-    exportJSON, importJSON, resetToSeed,
+    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed,
   };
 })();
 
@@ -4472,9 +4538,12 @@ const Calendar = (() => {
             <button class="secondary small" id="cal-next">›</button>
             <button class="secondary small" id="cal-today">วันนี้</button>
           </div>
-          <div class="view-toggle">
-            <button data-view="month" class="${state.view === "month" ? "active" : ""}">รายเดือน</button>
-            <button data-view="week" class="${state.view === "week" ? "active" : ""}">รายสัปดาห์</button>
+          <div class="row" style="gap:8px;">
+            <div class="view-toggle">
+              <button data-view="month" class="${state.view === "month" ? "active" : ""}">รายเดือน</button>
+              <button data-view="week" class="${state.view === "week" ? "active" : ""}">รายสัปดาห์</button>
+            </div>
+            <button class="secondary small" id="reload-schedule" title="ดึงตารางไลฟ์ล่าสุดจากชีทที่ฝังไว้ในไฟล์นี้มาอัปเดต (ราคา/รูป/ช่วงเวลาที่สะดวกของ Streamer จะไม่หาย)">↻ โหลดตารางไลฟ์ล่าสุด</button>
           </div>
         </div>
         ${renderGameFilter()}
@@ -4507,6 +4576,12 @@ const Calendar = (() => {
         render(container);
       });
     });
+    container.querySelector("#reload-schedule").addEventListener("click", async () => {
+      if (!confirm("ดึงตารางไลฟ์ล่าสุดจากชีทมาอัปเดต?\n\nจะอัปเดตวัน/เวลา/เกม/ผู้ไลฟ์ให้ตรงกับชีทล่าสุด ส่วนราคา รูปภาพ และช่วงเวลาที่สะดวกของ Streamer ที่ตั้งค่าไว้ในหลังบ้านจะไม่หาย")) return;
+      const result = await DB.syncScheduleFromSeed();
+      render(container);
+      Util.showToast(`อัปเดตตารางไลฟ์แล้ว (${result.newCount} คิว${result.addedStreamers ? `, เพิ่ม Streamer ใหม่ ${result.addedStreamers} คน` : ""})`);
+    });
   }
 
   function shift(dir) {
@@ -4527,6 +4602,28 @@ const Calendar = (() => {
     if (app) render(app);
   }
 
+  // Compact "normal/discount price + available days & times" line shown under each session row,
+  // so admin can see it at a glance without opening the Streamer detail page.
+  function sessionSubInfo(s, gameId) {
+    if (!s) return "";
+    const p = DB.getPrice(s.id, gameId);
+    const hasDiscount = p && p.discountPrice !== null && p.discountPrice !== undefined && p.discountPrice !== "";
+    const priceText = !p
+      ? "ยังไม่ตั้งราคา"
+      : hasDiscount
+      ? `ปกติ ฿${Util.fmtMoney(p.normalPrice)} → ลด ฿${Util.fmtMoney(p.discountPrice)}`
+      : `ราคา ฿${Util.fmtMoney(p.normalPrice)}`;
+
+    const avail = s.availability || { timeSlots: [], days: [] };
+    const slotLabels = Util.TIME_SLOTS.filter((t) => avail.timeSlots.includes(t.key)).map((t) => t.label);
+    const dayLabels = Util.AVAIL_DAYS.filter((d) => avail.days.includes(d.key)).map((d) => d.label);
+    const availText = slotLabels.length || dayLabels.length
+      ? `สะดวก: ${[...slotLabels, ...dayLabels].join(" ")}`
+      : "ยังไม่ระบุเวลาสะดวก";
+
+    return `<div class="session-row-sub"><span>${Util.escapeHtml(priceText)}</span><span>${Util.escapeHtml(availText)}</span></div>`;
+  }
+
   function openDayModal(dateISO) {
     const d = Util.parseISODate(dateISO);
     const label = `${d.getDate()} ${Util.MONTH_NAMES_TH[d.getMonth()]} ${d.getFullYear() + 543}`;
@@ -4538,12 +4635,15 @@ const Calendar = (() => {
       const s = DB.getStreamer(e.streamerId);
       const cost = DB.getEntryCost(e);
       return `<div class="session-row ${e.isTournament ? "is-tournament" : ""}">
-        <span class="badge" style="background:${g ? g.color : "#666"}">${g ? Util.escapeHtml(g.name) : "?"}</span>
-        <span class="time">${Util.escapeHtml(e.time)}</span>
-        ${Util.avatarHTML(s, "tiny")}
-        <a class="streamer-link" data-streamer="${s ? s.id : ""}">${Util.escapeHtml(s ? s.name : "ไม่ระบุ")}</a>
-        <button class="tour-icon-toggle ${e.isTournament ? "active" : ""}" data-toggle-tournament="${e.id}" title="${e.isTournament ? "ยกเลิกทัวร์นาเมนต์ (คิดเงินตามปกติ)" : "ทำเครื่องหมายว่าคนนี้มาทัวร์นาเมนต์ฟรี"}">🏆</button>
-        <span class="price ${cost.free ? "free" : ""}">${cost.free ? "ฟรี" : "฿" + Util.fmtMoney(cost.actual)}</span>
+        <div class="session-row-main">
+          <span class="badge" style="background:${g ? g.color : "#666"}">${g ? Util.escapeHtml(g.name) : "?"}</span>
+          <span class="time">${Util.escapeHtml(e.time)}</span>
+          ${Util.avatarHTML(s, "tiny")}
+          <a class="streamer-link" data-streamer="${s ? s.id : ""}">${Util.escapeHtml(s ? s.name : "ไม่ระบุ")}</a>
+          <button class="tour-icon-toggle ${e.isTournament ? "active" : ""}" data-toggle-tournament="${e.id}" title="${e.isTournament ? "ยกเลิกทัวร์นาเมนต์ (คิดเงินตามปกติ)" : "ทำเครื่องหมายว่าคนนี้มาทัวร์นาเมนต์ฟรี"}">🏆</button>
+          <span class="price ${cost.free ? "free" : ""}">${cost.free ? "ฟรี" : "฿" + Util.fmtMoney(cost.actual)}</span>
+        </div>
+        ${sessionSubInfo(s, e.gameId)}
       </div>`;
     }).join("");
     if (!entries.length) rows = `<div class="empty-state">ไม่มีคิวไลฟ์ในวันนี้</div>`;
@@ -4838,44 +4938,35 @@ const Admin = (() => {
       <div class="card">
         <div class="row between">
           <h2>Streamers (${streamers.length})</h2>
-          <div class="row" style="gap:6px;">
-            <button class="secondary small" id="reload-seed" title="โหลดตารางไลฟ์ล่าสุดที่ฝังไว้ในไฟล์นี้ใหม่ (ข้อมูลราคา/รูป/สถานะที่แก้ไว้จะหายไป)">↻ โหลดตารางไลฟ์ล่าสุด</button>
-            <button id="add-streamer">+ เพิ่ม Streamer</button>
-          </div>
+          <button id="add-streamer">+ เพิ่ม Streamer</button>
         </div>
+        <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th></th><th>ชื่อ</th><th>เกมที่รับงาน</th><th></th></tr></thead>
+          <thead><tr><th></th><th>ชื่อ</th><th>เกม &amp; ราคา</th><th>ช่วงเวลาที่สะดวก</th><th>วันที่สะดวก</th><th></th></tr></thead>
           <tbody>
             ${streamers.map((s) => {
               const row = `<tr>
                 <td>${Util.avatarHTML(s, "tiny")}</td>
-                <td>${Util.escapeHtml(s.name)}</td>
-                <td>${s.prices.map((p) => {
-                  const g = DB.getGame(p.gameId);
-                  return g ? `<span class="badge" style="background:${g.color};margin-right:4px;">${Util.escapeHtml(g.name)}</span>` : "";
-                }).join("")}</td>
+                <td style="white-space:nowrap;">${Util.escapeHtml(s.name)}</td>
+                <td>${gamePriceCell(s)}</td>
+                <td style="white-space:nowrap;">${timeSlotCell(s)}</td>
+                <td style="white-space:nowrap;">${dayCell(s)}</td>
                 <td class="row" style="gap:6px;">
                   <button class="secondary small" data-edit="${s.id}">แก้ไข</button>
                   <button class="danger small" data-del="${s.id}">ลบ</button>
                 </td>
               </tr>`;
               const editorRow = state.editingStreamerId === s.id
-                ? `<tr class="editor-row" id="editor-row-${s.id}"><td colspan="4">${renderStreamerEditor(s)}</td></tr>`
+                ? `<tr class="editor-row" id="editor-row-${s.id}"><td colspan="6">${renderStreamerEditor(s)}</td></tr>`
                 : "";
               return row + editorRow;
             }).join("")}
           </tbody>
         </table>
+        </div>
       </div>
     `;
 
-    body.querySelector("#reload-seed").addEventListener("click", async () => {
-      if (!confirm("โหลดตารางไลฟ์ล่าสุดที่ฝังไว้ในไฟล์นี้ใหม่?\n\nข้อมูลที่เคยแก้ไว้ทั้งหมด (ราคา, รูปภาพ, ช่วงเวลาที่สะดวก, สถานะไม่ไลฟ์/ทัวร์นาเมนต์) จะถูกล้างและแทนที่ด้วยข้อมูลตั้งต้น การกระทำนี้ย้อนกลับไม่ได้")) return;
-      await DB.resetToSeed();
-      state.editingStreamerId = null;
-      renderBody(body.closest("main"));
-      Util.showToast("โหลดข้อมูลล่าสุดแล้ว");
-    });
     body.querySelector("#add-streamer").addEventListener("click", () => {
       const name = prompt("ชื่อ Streamer:");
       if (!name || !name.trim()) return;
@@ -4901,6 +4992,30 @@ const Admin = (() => {
     }));
 
     if (state.editingStreamerId) attachStreamerEditorEvents(body);
+  }
+
+  function gamePriceCell(s) {
+    if (!s.prices.length) return `<span style="color:var(--text-dim);font-size:12px;">—</span>`;
+    return s.prices.map((p) => {
+      const g = DB.getGame(p.gameId);
+      const hasDiscount = p.discountPrice !== null && p.discountPrice !== undefined && p.discountPrice !== "";
+      const priceText = hasDiscount
+        ? `฿${Util.fmtMoney(p.normalPrice)} → <strong style="color:var(--success);">฿${Util.fmtMoney(p.discountPrice)}</strong>`
+        : `฿${Util.fmtMoney(p.normalPrice)}`;
+      return `<div style="white-space:nowrap;margin-bottom:2px;"><span class="badge" style="background:${g ? g.color : "#666"};margin-right:6px;">${g ? Util.escapeHtml(g.name) : "?"}</span><span style="font-size:12px;">${priceText}</span></div>`;
+    }).join("");
+  }
+
+  function timeSlotCell(s) {
+    const avail = s.availability || { timeSlots: [], days: [] };
+    if (!avail.timeSlots.length) return `<span style="color:var(--text-dim);font-size:12px;">—</span>`;
+    return Util.TIME_SLOTS.map((t) => `<span class="badge" style="background:${avail.timeSlots.includes(t.key) ? "var(--accent)" : "var(--panel-2)"};color:${avail.timeSlots.includes(t.key) ? "white" : "var(--text-dim)"};border:1px solid var(--border);margin-right:3px;">${t.label}</span>`).join("");
+  }
+
+  function dayCell(s) {
+    const avail = s.availability || { timeSlots: [], days: [] };
+    if (!avail.days.length) return `<span style="color:var(--text-dim);font-size:12px;">—</span>`;
+    return Util.AVAIL_DAYS.map((d) => `<span class="badge" style="background:${avail.days.includes(d.key) ? "var(--accent)" : "var(--panel-2)"};color:${avail.days.includes(d.key) ? "white" : "var(--text-dim)"};border:1px solid var(--border);margin-right:3px;">${d.label}</span>`).join("");
   }
 
   function renderStreamerEditor(s) {
