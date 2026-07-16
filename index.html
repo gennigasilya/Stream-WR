@@ -1,1360 +1,198 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>STREAM/OPS — Live Schedule &amp; Budget Console</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-<style>
-  html, body { margin: 0; padding: 0; height: 100%; }
-  #root { min-height: 100vh; }
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script type="text/babel" data-presets="react">
-const RAW_SCHEDULE = [{"id": 4, "date": "01/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "Saifahsmd", "pic": "Nick"}, {"id": 5, "date": "01/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "rainbykello", "pic": "Nick"}, {"id": 6, "date": "01/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "SirJobz", "pic": "Butt"}, {"id": 7, "date": "01/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "BABU Channel", "pic": "Nick"}, {"id": 8, "date": "01/07/2026", "time": "16.00 - 18.00", "game": "Cabal", "streamer": "KOKOV2", "pic": "Nick"}, {"id": 9, "date": "01/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "1000T", "pic": "Butt"}, {"id": 10, "date": "01/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "NongPangPon", "pic": "Nick"}, {"id": 11, "date": "01/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "xEndov", "pic": "Butt"}, {"id": 12, "date": "01/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "ปาเฟรม90องศา", "pic": "Butt"}, {"id": 13, "date": "01/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "KRUN-KID (ครุ่นคิด)", "pic": "Butt"}, {"id": 14, "date": "02/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "Kumataro", "pic": "Nick"}, {"id": 15, "date": "02/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "W1nstoncs", "pic": "Nick"}, {"id": 16, "date": "02/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "winpw", "pic": "Nick"}, {"id": 17, "date": "02/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "เลย์ วัดสุด", "pic": "Nick"}, {"id": 18, "date": "02/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Alice Wonder Game", "pic": "Nick"}, {"id": 19, "date": "02/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "JameRunner", "pic": "Butt"}, {"id": 20, "date": "02/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "Saifahsmd", "pic": "Nick"}, {"id": 21, "date": "02/07/2026", "time": "16.00 - 18.00", "game": "Cabal", "streamer": "Tonk Ratree", "pic": "Nick"}, {"id": 22, "date": "02/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "TopTen", "pic": "Butt"}, {"id": 23, "date": "02/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "LINLIN", "pic": "Nick"}, {"id": 24, "date": "02/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "Pipe RockHell", "pic": "Butt"}, {"id": 25, "date": "02/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": "Butt"}, {"id": 26, "date": "02/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "HiYoRi Chanel", "pic": "Butt"}, {"id": 27, "date": "03/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "soy sauce", "pic": "Nick"}, {"id": 28, "date": "03/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "W1nstoncs", "pic": "Nick"}, {"id": 29, "date": "03/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Dunkkystar", "pic": "Nick"}, {"id": 30, "date": "03/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "เลย์ วัดสุด", "pic": "Nick"}, {"id": 32, "date": "03/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "Seri", "pic": "Butt"}, {"id": 33, "date": "03/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "1nonCh", "pic": "Nick"}, {"id": 34, "date": "03/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "GrizkornCN", "pic": "Nick"}, {"id": 35, "date": "03/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "VRVSCH", "pic": "Butt"}, {"id": 36, "date": "03/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "Fanta", "pic": "Butt"}, {"id": 37, "date": "03/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "ByJamesThan", "pic": "Butt"}, {"id": 38, "date": "03/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "mlne.pang", "pic": "Butt"}, {"id": 39, "date": "03/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "SlowMoji Channel", "pic": "Butt"}, {"id": 40, "date": "04/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "Bifernbii", "pic": "Butt"}, {"id": 41, "date": "04/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "Zeztz", "pic": "Butt"}, {"id": 42, "date": "04/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Kentama Gaming", "pic": "Butt"}, {"id": 43, "date": "04/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "BABU Channel", "pic": "Butt"}, {"id": 44, "date": "04/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "LarpCH", "pic": "Oak"}, {"id": 45, "date": "04/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "warkyrie", "pic": "Oak"}, {"id": 46, "date": "04/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "W1nstoncs", "pic": "Oak"}, {"id": 47, "date": "04/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "SOGER", "pic": "Nick"}, {"id": 48, "date": "04/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "ZRC CH", "pic": "Nick"}, {"id": 50, "date": "04/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "เห็ดเน่าChannel", "pic": "Nick"}, {"id": 51, "date": "04/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": "Nick"}, {"id": 52, "date": "04/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "ลุงลิ้น - LoongLync", "pic": "Nick"}, {"id": 53, "date": "05/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "JameRunner", "pic": "Oak"}, {"id": 54, "date": "05/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "GrizkornCN", "pic": "Oak"}, {"id": 55, "date": "05/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "กวินนา", "pic": "Oak"}, {"id": 56, "date": "05/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "NEWX", "pic": "Oak"}, {"id": 57, "date": "05/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "HiYoRi Chanel", "pic": "Oak"}, {"id": 58, "date": "05/07/2026", "time": "20.00 - 23.00", "game": "TalesRunner", "streamer": "Titleboy", "pic": ""}, {"id": 59, "date": "05/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "1nonCh", "pic": "Oak"}, {"id": 60, "date": "05/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "LINLIN", "pic": "Butt"}, {"id": 61, "date": "05/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "Kentama Gaming", "pic": "Butt"}, {"id": 62, "date": "05/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "WAN KUNG", "pic": "Butt"}, {"id": 63, "date": "05/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "Fizzy K", "pic": "Butt"}, {"id": 64, "date": "05/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "sukieman", "pic": "Butt"}, {"id": 65, "date": "06/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "ข้าวมันไก่", "pic": "Nick"}, {"id": 66, "date": "06/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "MCEX", "pic": "Nick"}, {"id": 67, "date": "06/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "sOber2k", "pic": "Nick"}, {"id": 68, "date": "06/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "เลย์ วัดสุด", "pic": "Nick"}, {"id": 69, "date": "06/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Alice Wonder Game", "pic": "Nick"}, {"id": 70, "date": "06/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "KXYZ", "pic": "Nick"}, {"id": 71, "date": "06/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "mlne.pang", "pic": "Butt"}, {"id": 72, "date": "06/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "Richie Gamer", "pic": "Butt"}, {"id": 73, "date": "06/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "VRVSCH", "pic": "Butt"}, {"id": 74, "date": "06/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "NongPangPon", "pic": "Nick"}, {"id": 75, "date": "06/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "Grimwynn", "pic": "Butt"}, {"id": 76, "date": "06/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": "Butt"}, {"id": 77, "date": "06/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "KRUN-KID (ครุ่นคิด)", "pic": "Butt"}, {"id": 78, "date": "07/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "soy sauce", "pic": "Nick"}, {"id": 79, "date": "07/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "winpw", "pic": "Nick"}, {"id": 80, "date": "07/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Lookkad Go Outside", "pic": "Nick"}, {"id": 81, "date": "07/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "W1nstoncs", "pic": "Nick"}, {"id": 82, "date": "07/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "TopTen", "pic": "Nick"}, {"id": 83, "date": "07/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "Seri", "pic": "Nick"}, {"id": 84, "date": "07/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "IN GAMER", "pic": "Butt"}, {"id": 85, "date": "07/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "ZRC CH", "pic": "Butt"}, {"id": 86, "date": "07/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "SlowMoji Channel", "pic": "Butt"}, {"id": 87, "date": "07/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "LINLIN", "pic": "Nick"}, {"id": 88, "date": "07/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "-YuppyS`", "pic": "Butt"}, {"id": 89, "date": "07/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "1nonCh", "pic": "Butt"}, {"id": 90, "date": "07/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "HiYoRi Chanel", "pic": "Butt"}, {"id": 91, "date": "08/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "TPAT_Z", "pic": "Nick"}, {"id": 92, "date": "08/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "BABU Channel", "pic": "Nick"}, {"id": 93, "date": "08/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Bifernbii", "pic": "Nick"}, {"id": 94, "date": "08/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "GrizkornCN", "pic": "Nick"}, {"id": 95, "date": "08/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Richie Gamer", "pic": "Nick"}, {"id": 96, "date": "08/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "Jupitamp", "pic": "Nick"}, {"id": 97, "date": "08/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "1nonCh", "pic": "Butt"}, {"id": 98, "date": "08/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "Tonk Ratree", "pic": "Butt"}, {"id": 99, "date": "08/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "sunwaltz", "pic": "Butt"}, {"id": 100, "date": "08/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "NongPangPon", "pic": "Nick"}, {"id": 101, "date": "08/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "Kentama Gaming", "pic": "Butt"}, {"id": 102, "date": "08/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": "Butt"}, {"id": 103, "date": "08/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "KRUN-KID (ครุ่นคิด)", "pic": "Butt"}, {"id": 104, "date": "09/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "ReGenSer", "pic": "Nick"}, {"id": 106, "date": "09/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "JameRunner", "pic": "Nick"}, {"id": 108, "date": "09/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Alice Wonder Game", "pic": "Nick"}, {"id": 109, "date": "09/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "Pipe RockHell", "pic": "Nick"}, {"id": 110, "date": "09/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "TumSoyedx2", "pic": "Butt"}, {"id": 111, "date": "09/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "KOKOV2", "pic": "Nick"}, {"id": 112, "date": "09/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "Kentama Gaming", "pic": "Butt"}, {"id": 113, "date": "09/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "WAN KUNG", "pic": "Nick"}, {"id": 114, "date": "09/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "ByJamesThan", "pic": "Butt"}, {"id": 115, "date": "09/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "NEWX", "pic": "Butt"}, {"id": 116, "date": "09/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "HiYoRi Chanel", "pic": "Butt"}, {"id": 117, "date": "10/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "manownongp", "pic": "Nick"}, {"id": 118, "date": "10/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "W1nstoncs", "pic": "Nick"}, {"id": 119, "date": "10/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Destiny", "pic": "Nick"}, {"id": 120, "date": "10/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": "Nick"}, {"id": 121, "date": "10/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "TopTen", "pic": "Nick"}, {"id": 122, "date": "10/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "RYOEN", "pic": "Nick"}, {"id": 123, "date": "10/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "1nonCh", "pic": "Butt"}, {"id": 124, "date": "10/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "SOGER", "pic": "Butt"}, {"id": 125, "date": "10/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "SlowMoji Channel", "pic": "Butt"}, {"id": 126, "date": "10/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "Arksylum", "pic": "Nick"}, {"id": 127, "date": "10/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "Dunkkystar", "pic": "Butt"}, {"id": 128, "date": "10/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "Saifahsmd", "pic": "Butt"}, {"id": 129, "date": "10/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "ZRC CH", "pic": "Butt"}, {"id": 130, "date": "11/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "rNeay", "pic": "Nick"}, {"id": 131, "date": "11/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "Zeztz", "pic": "Nick"}, {"id": 132, "date": "11/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Kentama Gaming", "pic": "Nick"}, {"id": 133, "date": "11/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "เลย์ วัดสุด", "pic": "Nick"}, {"id": 134, "date": "11/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "KIKIKO63", "pic": "Oak"}, {"id": 135, "date": "11/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "NoeylynTales", "pic": "Nick"}, {"id": 136, "date": "11/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "TumSoyedx2", "pic": "Nick"}, {"id": 137, "date": "11/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "LINLIN", "pic": "Nick"}, {"id": 138, "date": "11/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "sukieman", "pic": "Nick"}, {"id": 140, "date": "11/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "Titleboyz", "pic": "Nick"}, {"id": 141, "date": "11/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "BABU Channel", "pic": "Nick"}, {"id": 142, "date": "11/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "ลุงลิ้น - LoongLync", "pic": "Oak"}, {"id": 143, "date": "12/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "Domeder", "pic": "Nick"}, {"id": 144, "date": "12/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "BoonChu", "pic": "Nick"}, {"id": 145, "date": "12/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "เห็ดเน่าChannel", "pic": "Nick"}, {"id": 146, "date": "12/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "IP1250", "pic": "Nick"}, {"id": 147, "date": "12/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Kentama Gaming", "pic": "Nick"}, {"id": 148, "date": "12/07/2026", "time": "20.00 - 23.00", "game": "TalesRunner", "streamer": "beam_bbbt", "pic": ""}, {"id": 149, "date": "12/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "SAIAIW", "pic": "Oak"}, {"id": 150, "date": "12/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "Tonk Ratree", "pic": "Oak"}, {"id": 151, "date": "12/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "HiYoRi Chanel", "pic": "Oak"}, {"id": 152, "date": "12/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "Queen of Pink", "pic": "Nick"}, {"id": 153, "date": "12/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "Saifahsmd", "pic": "Oak"}, {"id": 154, "date": "12/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "ZRC CH", "pic": "Oak"}, {"id": 155, "date": "13/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "yahoo", "pic": "Nick"}, {"id": 156, "date": "13/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "GrizkornCN", "pic": "Nick"}, {"id": 157, "date": "13/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "ข้าวมันไก่", "pic": "Nick"}, {"id": 158, "date": "13/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "SOFTNAJAA", "pic": "Nick"}, {"id": 159, "date": "13/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Alice Wonder Game", "pic": "Nick"}, {"id": 160, "date": "13/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "ฝ่ายชอบกินแซลมอน", "pic": "Nick"}, {"id": 161, "date": "13/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "บาบายากา", "pic": "Nick"}, {"id": 162, "date": "13/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "ZRC CH", "pic": "Butt"}, {"id": 163, "date": "13/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "rainbykello", "pic": "Butt"}, {"id": 164, "date": "13/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "Fanta", "pic": "Butt"}, {"id": 165, "date": "13/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "Grimwynn", "pic": "Butt"}, {"id": 166, "date": "13/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "1nonCh", "pic": "Butt"}, {"id": 167, "date": "13/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "KRUN-KID (ครุ่นคิด)", "pic": "Butt"}, {"id": 168, "date": "14/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "กิมจิ", "pic": "Nick"}, {"id": 169, "date": "14/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "BABU Channel", "pic": "Nick"}, {"id": 170, "date": "14/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "winpw", "pic": "Nick"}, {"id": 171, "date": "14/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "เลย์ วัดสุด", "pic": "Nick"}, {"id": 172, "date": "14/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "HiYoRi Chanel", "pic": "Nick"}, {"id": 173, "date": "14/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "Seri", "pic": "Nick"}, {"id": 174, "date": "14/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "Saifahsmd", "pic": "Nick"}, {"id": 175, "date": "14/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "VRVSCH", "pic": "Butt"}, {"id": 176, "date": "14/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "TopTen", "pic": "Butt"}, {"id": 177, "date": "14/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "GrizkornCN", "pic": "Butt"}, {"id": 178, "date": "14/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "warkyrie", "pic": "Butt"}, {"id": 179, "date": "14/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": "Butt"}, {"id": 180, "date": "14/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "Richie Gamer", "pic": "Butt"}, {"id": 182, "date": "15/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "GrizkornCN", "pic": ""}, {"id": 184, "date": "15/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "winpw", "pic": ""}, {"id": 185, "date": "15/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "KIKIKO63", "pic": ""}, {"id": 186, "date": "15/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "SirJobz", "pic": ""}, {"id": 187, "date": "15/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "1nonCh", "pic": ""}, {"id": 188, "date": "15/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "KOKOV2", "pic": ""}, {"id": 189, "date": "15/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "Kentama Gaming", "pic": ""}, {"id": 190, "date": "15/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "ARMZIP", "pic": ""}, {"id": 191, "date": "15/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "xEndov", "pic": ""}, {"id": 192, "date": "15/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "W1nstoncs", "pic": ""}, {"id": 193, "date": "15/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "KRUN-KID (ครุ่นคิด)", "pic": ""}, {"id": 194, "date": "16/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "Destiny", "pic": ""}, {"id": 195, "date": "16/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "Fizzy K", "pic": ""}, {"id": 196, "date": "16/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Kumataro", "pic": ""}, {"id": 197, "date": "16/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "TumSoyedx2", "pic": ""}, {"id": 198, "date": "16/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "TopTen", "pic": ""}, {"id": 199, "date": "16/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "Kentama Gaming", "pic": ""}, {"id": 200, "date": "16/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "IP1250", "pic": ""}, {"id": 201, "date": "16/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "Tonk Ratree", "pic": ""}, {"id": 202, "date": "16/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "VRVSCH", "pic": ""}, {"id": 203, "date": "16/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "Arksylum", "pic": ""}, {"id": 204, "date": "16/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "Titleboyz", "pic": ""}, {"id": 205, "date": "16/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "BABU Channel", "pic": ""}, {"id": 206, "date": "16/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "SlowMoji Channel", "pic": ""}, {"id": 207, "date": "17/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "-YuppyS`", "pic": ""}, {"id": 208, "date": "17/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "W1nstoncs", "pic": ""}, {"id": 209, "date": "17/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Dunkkystar", "pic": ""}, {"id": 210, "date": "17/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "mlne.pang", "pic": ""}, {"id": 211, "date": "17/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "HiYoRi Chanel", "pic": ""}, {"id": 212, "date": "17/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "ReGenSer", "pic": ""}, {"id": 213, "date": "17/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "1nonCh", "pic": ""}, {"id": 214, "date": "17/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "GrizkornCN", "pic": ""}, {"id": 215, "date": "17/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "KIKIKO63", "pic": ""}, {"id": 216, "date": "17/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "WAN KUNG", "pic": ""}, {"id": 217, "date": "17/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "เห็ดเน่าChannel", "pic": ""}, {"id": 218, "date": "17/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": ""}, {"id": 219, "date": "17/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "ZRC CH", "pic": ""}, {"id": 220, "date": "18/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "JameRunner", "pic": ""}, {"id": 221, "date": "18/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "LookBas JJ", "pic": ""}, {"id": 222, "date": "18/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Pipe RockHell", "pic": ""}, {"id": 223, "date": "18/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "เลย์ วัดสุด", "pic": ""}, {"id": 224, "date": "18/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Kentama Gaming", "pic": ""}, {"id": 225, "date": "18/07/2026", "time": "19.00 - 21.00", "game": "TalesRunner", "streamer": "คุณชายอาม", "pic": ""}, {"id": 226, "date": "18/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "ปาเฟรม90องศา", "pic": ""}, {"id": 227, "date": "18/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "SOGER", "pic": ""}, {"id": 228, "date": "18/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "Richie Gamer", "pic": ""}, {"id": 230, "date": "18/07/2026", "time": "21.30 - 23.30", "game": "TalesRunner", "streamer": "ByJamesThan", "pic": ""}, {"id": 231, "date": "18/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "Saifahsmd", "pic": ""}, {"id": 232, "date": "18/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "ลุงลิ้น - LoongLync", "pic": ""}, {"id": 233, "date": "19/07/2026", "time": "14.00 - 16.00", "game": "TalesRunner", "streamer": "Nyaruka Mirinne Vtuber Ch", "pic": ""}, {"id": 234, "date": "19/07/2026", "time": "14.00 - 16.00", "game": "WarZ", "streamer": "BABU Channel", "pic": ""}, {"id": 235, "date": "19/07/2026", "time": "16.30 - 18.30", "game": "TalesRunner", "streamer": "Jupitamp", "pic": ""}, {"id": 236, "date": "19/07/2026", "time": "16.30 - 18.30", "game": "WarZ", "streamer": "BoonChu", "pic": ""}, {"id": 237, "date": "19/07/2026", "time": "18.30 - 20.30", "game": "TOSM", "streamer": "Alice Wonder Game", "pic": ""}, {"id": 238, "date": "19/07/2026", "time": "20.00 - 23.00", "game": "TalesRunner", "streamer": "PIPEROCKHELL", "pic": ""}, {"id": 239, "date": "19/07/2026", "time": "19.00 - 21.00", "game": "WarZ", "streamer": "1nonCh", "pic": ""}, {"id": 240, "date": "19/07/2026", "time": "20.00 - 22.00", "game": "Cabal", "streamer": "Tonk Ratree", "pic": ""}, {"id": 241, "date": "19/07/2026", "time": "21.00 - 23.00", "game": "TOSM", "streamer": "SlowMoji Channel", "pic": ""}, {"id": 242, "date": "19/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "LINLIN", "pic": ""}, {"id": 243, "date": "19/07/2026", "time": "21.30 - 23.30", "game": "WarZ", "streamer": "บ้านนอกคอกนา", "pic": ""}, {"id": 244, "date": "19/07/2026", "time": "23.30 - 01.30", "game": "TOSM", "streamer": "ZRC CH", "pic": ""}, {"id": 254, "date": "20/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "NongPangPon", "pic": ""}, {"id": 267, "date": "21/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "ARMZIP", "pic": ""}, {"id": 280, "date": "22/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "GrizkornCN", "pic": ""}, {"id": 293, "date": "23/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "Arksylum", "pic": ""}, {"id": 306, "date": "24/07/2026", "time": "21.00 - 23.00", "game": "Zone4", "streamer": "WAN KUNG", "pic": ""}, {"id": 328, "date": "26/07/2026", "time": "20.00 - 23.00", "game": "TalesRunner", "streamer": "Kentama Gaming", "pic": ""}];
-const RAW_STREAMERS = {"SirJobz": {"normalPrice": 1600, "discountPrice": null}, "JameRunner": {"normalPrice": 1000, "discountPrice": null}, "ByJamesThan": {"normalPrice": 1600, "discountPrice": null}, "Dunkkystar": {"normalPrice": 1000, "discountPrice": null}, "เห็ดเน่าChannel": {"normalPrice": 1300, "discountPrice": null}, "Titleboyz": {"normalPrice": 1000, "discountPrice": 700}, "ReGenSer": {"normalPrice": 1400, "discountPrice": null}, "-YuppyS`": {"normalPrice": 1000, "discountPrice": null}, "Pipe RockHell": {"normalPrice": 2500, "discountPrice": null}, "Domeder": {"normalPrice": 1500, "discountPrice": null}, "Kentama Gaming": {"normalPrice": 1000, "discountPrice": 300}, "ข้าวมันไก่": {"normalPrice": 1000, "discountPrice": 300}, "PEARO": {"normalPrice": 1000, "discountPrice": null}, "Monmercyx": {"normalPrice": 1200, "discountPrice": null}, "warkyrie": {"normalPrice": 1500, "discountPrice": null}, "Jupitamp": {"normalPrice": 1000, "discountPrice": 500}, "Alizabyleth Ch": {"normalPrice": 2500, "discountPrice": null}, "จ้าวโลก": {"normalPrice": 2000, "discountPrice": null}, "Grimwynn": {"normalPrice": 1200, "discountPrice": null}, "soy sauce": {"normalPrice": 1000, "discountPrice": 300}, "เจ้าเจมส์": {"normalPrice": 1000, "discountPrice": null}, "NoeylynTales": {"normalPrice": 1000, "discountPrice": null}, "winpw": {"normalPrice": 1500, "discountPrice": null}, "Mukkiizang": {"normalPrice": 1000, "discountPrice": null}, "Chiisgamer": {"normalPrice": 1000, "discountPrice": null}, "zeeซี": {"normalPrice": 1000, "discountPrice": null}, "Seri": {"normalPrice": 1000, "discountPrice": 300}, "1KFuu": {"normalPrice": 1000, "discountPrice": 600}, "bentenniverse": {"normalPrice": 1000, "discountPrice": 300}, "Jewelly": {"normalPrice": 1000, "discountPrice": null}, "เมาแล้วขับ": {"normalPrice": 1000, "discountPrice": null}, "ชายเรียง": {"normalPrice": 2000, "discountPrice": null}, "Jay Isara": {"normalPrice": 4500, "discountPrice": null}, "dani desu": {"normalPrice": 1000, "discountPrice": null}, "plagoldfish": {"normalPrice": 1000, "discountPrice": null}, "RYOEN": {"normalPrice": 1000, "discountPrice": 300}, "กวินนา": {"normalPrice": 1000, "discountPrice": null}, "TaMaGot": {"normalPrice": 1000, "discountPrice": null}, "Kumataro": {"normalPrice": 1500, "discountPrice": null}, "คุณชายอาม": {"normalPrice": 5000, "discountPrice": null}, "MultiNa_RP": {"normalPrice": 1000, "discountPrice": null}, "xEndov": {"normalPrice": 2000, "discountPrice": null}, "Destiny": {"normalPrice": 1000, "discountPrice": 300}, "poppy.napas": {"normalPrice": 2000, "discountPrice": null}, "Tosetyz Gamer": {"normalPrice": 1000, "discountPrice": null}, "Nyaruka Mirinne Vtuber Ch": {"normalPrice": 1000, "discountPrice": null}, "manownongp": {"normalPrice": 1000, "discountPrice": null}, "Kisane Miko Ch": {"normalPrice": 2500, "discountPrice": null}, "MINI_lorii": {"normalPrice": 1000, "discountPrice": null}, "Phumjai": {"normalPrice": 1000, "discountPrice": null}, "ไอแคนนอนชอบเตน": {"normalPrice": 1000, "discountPrice": null}, "ชเวลอง": {"normalPrice": 1000, "discountPrice": 200}, "Lookkad Go Outside": {"normalPrice": 1000, "discountPrice": 200}, "Bifernbii": {"normalPrice": 1000, "discountPrice": 200}, "TPAT_Z": {"normalPrice": 1000, "discountPrice": 200}, "rNeay": {"normalPrice": 1000, "discountPrice": null}, "KXYZ": {"normalPrice": 1000, "discountPrice": 500}, "paopao": {"normalPrice": 1000, "discountPrice": null}, "KRUN-KID (ครุ่นคิด)": {"normalPrice": 1000, "discountPrice": 500}, "TaamJai": {"normalPrice": 5500, "discountPrice": null}, "elleko Junqko": {"normalPrice": 7000, "discountPrice": null}, "MR.RUBY": {"normalPrice": 2000, "discountPrice": null}, "ลุงลิ้น - LoongLync": {"normalPrice": 5000, "discountPrice": 2000}, "Bewzbewz": {"normalPrice": 5000, "discountPrice": null}, "sukieman": {"normalPrice": 1600, "discountPrice": null}, "1000T": {"normalPrice": 1000, "discountPrice": null}, "PoP Chanal": {"normalPrice": 5000, "discountPrice": null}, "IMoteH": {"normalPrice": 1000, "discountPrice": null}, "Xier Play": {"normalPrice": 3500, "discountPrice": null}, "SlowMoji Channel": {"normalPrice": 1000, "discountPrice": 200}, "VRVSCH": {"normalPrice": 1500, "discountPrice": 200}, "LarpCH": {"normalPrice": 2000, "discountPrice": 1600}, "Catshalbet": {"normalPrice": 1000, "discountPrice": null}, "ZRC CH": {"normalPrice": 1000, "discountPrice": 300}, "TopTen": {"normalPrice": 1000, "discountPrice": 200}, "1nonCh": {"normalPrice": 1000, "discountPrice": 500}, "2XMaster": {"normalPrice": 1200, "discountPrice": null}, "เลย์ วัดสุด": {"normalPrice": 1000, "discountPrice": 300}, "GrizkornCN": {"normalPrice": 1000, "discountPrice": null}, "BABU Channel": {"normalPrice": 1000, "discountPrice": null}, "Saifahsmd": {"normalPrice": 1000, "discountPrice": null}, "rainbykello": {"normalPrice": 1000, "discountPrice": null}, "Alice Wonder Game": {"normalPrice": 1000, "discountPrice": null}, "Tonk Ratree": {"normalPrice": 1000, "discountPrice": null}, "KOKOV2": {"normalPrice": 1000, "discountPrice": null}, "NongPangPon": {"normalPrice": 1000, "discountPrice": null}, "W1nstoncs": {"normalPrice": 1000, "discountPrice": null}, "HiYoRi Chanel": {"normalPrice": 1000, "discountPrice": null}, "LINLIN": {"normalPrice": 1000, "discountPrice": null}, "KIKIKO63": {"normalPrice": 1000, "discountPrice": null}, "IN GAMER": {"normalPrice": 1000, "discountPrice": null}, "BoonChu": {"normalPrice": 1000, "discountPrice": null}, "IP1250": {"normalPrice": 1000, "discountPrice": null}, "SAIAIW": {"normalPrice": 1000, "discountPrice": null}, "Queen of Pink": {"normalPrice": 1000, "discountPrice": null}, "yahoo": {"normalPrice": 1000, "discountPrice": null}, "SOFTNAJAA": {"normalPrice": 1000, "discountPrice": null}, "ฝ่ายชอบกินแซลมอน": {"normalPrice": 1000, "discountPrice": null}, "บาบายากา": {"normalPrice": 1000, "discountPrice": null}, "กิมจิ": {"normalPrice": 1000, "discountPrice": null}, "NEWX": {"normalPrice": 1000, "discountPrice": null}, "WAN KUNG": {"normalPrice": 1000, "discountPrice": null}, "Fizzy K": {"normalPrice": 1000, "discountPrice": null}, "MCEX": {"normalPrice": 1000, "discountPrice": null}, "sOber2k": {"normalPrice": 1000, "discountPrice": null}, "mlne.pang": {"normalPrice": 1000, "discountPrice": null}, "Richie Gamer": {"normalPrice": 1000, "discountPrice": null}, "บ้านนอกคอกนา": {"normalPrice": 1000, "discountPrice": null}, "Zeztz": {"normalPrice": 1000, "discountPrice": null}, "SOGER": {"normalPrice": 1000, "discountPrice": null}, "ZONE4 Gangwar": {"normalPrice": 1000, "discountPrice": null}, "TumSoyedx2": {"normalPrice": 1000, "discountPrice": null}, "Arksylum": {"normalPrice": 1000, "discountPrice": null}, "LookBas JJ": {"normalPrice": 1000, "discountPrice": null}, "ปาเฟรม90องศา": {"normalPrice": 1000, "discountPrice": null}, "sunwaltz": {"normalPrice": 1000, "discountPrice": null}, "ARMZIP": {"normalPrice": 1000, "discountPrice": null}, "beam_bbbt": {"normalPrice": 1000, "discountPrice": null}, "PIPEROCKHELL": {"normalPrice": 1000, "discountPrice": null}, "Fanta": {"normalPrice": 1000, "discountPrice": null}, "LookBas": {"normalPrice": 1000, "discountPrice": null}, "Titleboy": {"normalPrice": 1000, "discountPrice": 700}};
+// Data layer: localStorage-backed store, seeded from data/seed.json on first run.
+const DB = (() => {
+  const STORAGE_KEY = "streamer_manager_db_v1";
+  let state = null;
 
-const APP_CSS = "@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');\n\n.app-shell {\n  --bg: #FAF5EC;\n  --panel: #FFFFFF;\n  --panel2: #F3E9DA;\n  --line: #E3D3BC;\n  --text: #3B2A1F;\n  --muted: #8A7256;\n  --accent: #A9642F;\n  --accent-ink: #FFF8EF;\n  font-family: 'IBM Plex Sans Thai', 'Sarabun', 'Inter', -apple-system, sans-serif;\n  background: radial-gradient(1200px 600px at 10% -10%, #F1E4D0 0%, var(--bg) 55%), var(--bg);\n  color: var(--text);\n  min-height: 100%;\n  width: 100%;\n  box-sizing: border-box;\n  padding: 0;\n}\n.app-shell * { box-sizing: border-box; }\n.app-shell s { opacity: 0.6; }\n\n.loading {\n  padding: 60px; text-align: center; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-size: 20px; letter-spacing: 0.05em;\n}\n\n.save-warning {\n  background: #FBE7C6; color: #6B4A1E; padding: 8px 20px; font-size: 13px; border-bottom: 1px solid #E3C48F;\n}\n\n/* Top nav */\n.topnav {\n  display: flex; align-items: center; justify-content: space-between;\n  padding: 18px 28px; border-bottom: 1px solid var(--line);\n  flex-wrap: wrap; gap: 14px;\n  background: linear-gradient(180deg, rgba(169,100,47,0.04), transparent);\n}\n.brand { display: flex; align-items: center; gap: 10px; }\n.brand-mark {\n  font-size: 26px; color: var(--accent); text-shadow: 0 0 14px rgba(169,100,47,0.3);\n}\n.brand-title {\n  font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.06em; line-height: 1;\n}\n.brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; margin-top: 2px; }\n.build-tag { font-family: 'JetBrains Mono', monospace; background: var(--panel2); border-radius: 4px; padding: 1px 6px; margin-left: 6px; font-size: 10px; }\n.tabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }\n.tab {\n  border: none; background: transparent; color: var(--muted); padding: 8px 18px; border-radius: 999px;\n  font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.03em; cursor: pointer;\n  transition: all 0.15s ease;\n}\n.tab:hover { color: var(--text); }\n.tab.active { background: var(--accent); color: var(--accent-ink); }\n\n.content { padding: 24px 28px 60px; max-width: 1300px; margin: 0 auto; }\n\n/* Month picker */\n.dash-head { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }\n.month-picker { display: flex; align-items: center; gap: 12px; }\n.mp-btn {\n  width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);\n  color: var(--text); font-size: 16px; cursor: pointer;\n}\n.mp-btn:hover { border-color: var(--accent); color: var(--accent); }\n.mp-label { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.03em; min-width: 220px; }\n\n.view-toggle { display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 3px; }\n.vt { border: none; background: transparent; color: var(--muted); padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'IBM Plex Sans Thai'; }\n.vt.active { background: var(--panel2); color: var(--text); }\n\n.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-left: auto; font-size: 12px; color: var(--muted); }\n.legend-item { display: flex; align-items: center; gap: 6px; }\n.legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }\n\n.game-filter { display: flex; gap: 6px; flex-wrap: wrap; }\n.gf-btn {\n  border: 1px solid var(--line); background: var(--panel); color: var(--muted); padding: 6px 12px;\n  border-radius: 999px; font-size: 12px; cursor: pointer; transition: all 0.15s ease;\n}\n.gf-btn:hover { border-color: var(--gc, var(--accent)); color: var(--text); }\n.gf-btn.active { background: var(--gc, var(--accent)); border-color: var(--gc, var(--accent)); color: var(--accent-ink); }\n\n/* Calendar */\n.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }\n.cal-dow { text-align: center; font-size: 12px; color: var(--muted); padding: 4px 0 8px; font-family: 'Barlow Condensed'; letter-spacing: 0.05em; }\n.cal-cell {\n  min-height: 92px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;\n  padding: 8px; text-align: left; color: var(--text); cursor: pointer; display: flex; flex-direction: column; gap: 6px;\n  transition: border-color 0.15s ease, transform 0.1s ease;\n}\n.cal-cell:hover { border-color: #C9AF8C; transform: translateY(-1px); }\n.cal-cell.empty { background: transparent; border: none; cursor: default; }\n.cal-cell.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }\n.cal-cell.selected { background: var(--panel2); border-color: var(--accent); }\n.cal-daynum { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }\n.cal-chips { display: flex; flex-wrap: wrap; gap: 4px; }\n.cal-count { margin-top: auto; font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }\n\n.chip {\n  display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-family: 'JetBrains Mono', monospace;\n  padding: 2px 6px; border-radius: 5px; background: color-mix(in srgb, var(--gc) 18%, transparent);\n  color: var(--gc); border: 1px solid color-mix(in srgb, var(--gc) 45%, transparent);\n  white-space: nowrap;\n}\n.chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gc); box-shadow: 0 0 6px var(--gg); }\n\n/* Week view */\n.week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }\n.week-col { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; min-height: 200px; }\n.week-col.today { border-color: var(--accent); }\n.week-col-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }\n.week-dow { font-size: 11px; color: var(--muted); }\n.week-daynum { font-family: 'Barlow Condensed'; font-size: 20px; font-weight: 700; }\n.week-entries { display: flex; flex-direction: column; gap: 6px; }\n.week-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 10px 0; }\n.week-entry { border-left: 3px solid var(--gc); background: var(--panel2); border-radius: 6px; padding: 6px 8px; }\n.we-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }\n.we-game { font-size: 11px; color: var(--gc); font-weight: 600; }\n.we-streamer { font-size: 12px; margin-top: 1px; }\n\n/* Day panel */\n.day-panel { margin-top: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }\n.day-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }\n.dp-title { font-family: 'Barlow Condensed'; font-size: 20px; font-weight: 700; }\n.dp-close { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 12px; }\n.dp-close:hover { color: var(--text); border-color: var(--accent); }\n.dp-list { display: flex; flex-direction: column; gap: 6px; }\n.dp-row {\n  display: grid; grid-template-columns: 110px 50px 1fr 90px 90px; align-items: center; gap: 10px;\n  background: var(--panel2); border-left: 3px solid var(--gc); border-radius: 6px; padding: 8px 10px; font-size: 13px;\n}\n.dp-time { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: 12px; }\n.dp-streamer { font-weight: 600; }\n.dp-pic { font-size: 11px; color: var(--muted); }\n.dp-price { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--accent); }\n.dp-empty { color: var(--muted); padding: 16px; text-align: center; font-size: 13px; }\n\n/* Pages generic */\n.page { display: flex; flex-direction: column; gap: 16px; }\n.page-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }\n.page-title { font-family: 'Barlow Condensed'; font-size: 26px; font-weight: 700; letter-spacing: 0.02em; }\n.page-title.small { font-size: 18px; margin-top: 8px; }\n.search {\n  background: var(--panel); border: 1px solid var(--line); color: var(--text); padding: 9px 14px; border-radius: 8px;\n  font-size: 13px; min-width: 220px; font-family: 'IBM Plex Sans Thai';\n}\n.search:focus { outline: none; border-color: var(--accent); }\n\n.back-link { align-self: flex-start; background: transparent; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 4px; }\n.back-link:hover { color: var(--accent); }\n\n/* Streamer grid */\n.streamer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }\n.streamer-card {\n  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; text-align: left;\n  cursor: pointer; color: var(--text); display: flex; flex-direction: column; gap: 8px; transition: border-color 0.15s;\n}\n.streamer-card:hover { border-color: var(--accent); }\n.avatar-img { border-radius: 8px; object-fit: cover; display: block; }\n.avatar-fallback {\n  border-radius: 8px; background: var(--panel2); display: flex; align-items: center; justify-content: center;\n  font-family: 'Barlow Condensed'; font-weight: 700; color: var(--accent);\n}\n.sc-avatar {\n  width: 34px; height: 34px; border-radius: 8px; background: var(--panel2); display: flex; align-items: center; justify-content: center;\n  font-family: 'Barlow Condensed'; font-weight: 700; color: var(--accent); overflow: hidden;\n}\n.sc-name { font-weight: 600; font-size: 14px; }\n.sc-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }\n.sc-price { font-family: 'JetBrains Mono', monospace; color: var(--accent); }\n.sc-old { margin-left: 4px; }\n\n/* Streamer detail */\n.streamer-detail { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 18px; }\n.sd-head { display: flex; align-items: center; gap: 14px; }\n.sd-avatar {\n  width: 54px; height: 54px; border-radius: 12px; background: var(--panel2); display: flex; align-items: center; justify-content: center;\n  font-family: 'Barlow Condensed'; font-weight: 700; font-size: 22px; color: var(--accent); overflow: hidden;\n}\n.sd-name { font-family: 'Barlow Condensed'; font-size: 24px; font-weight: 700; }\n.sd-games { display: flex; gap: 6px; margin-top: 6px; }\n.sd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }\n.stat { background: var(--panel2); border-radius: 10px; padding: 12px 14px; }\n.stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }\n.stat-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; }\n.stat-value.accent { color: var(--accent); }\n.savings-note { font-size: 13px; color: #3E8E5B; background: rgba(62,142,91,0.08); border: 1px solid rgba(62,142,91,0.25); padding: 8px 12px; border-radius: 8px; }\n\n.sd-table { display: flex; flex-direction: column; gap: 4px; }\n.sd-row { display: grid; grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr 0.9fr; gap: 10px; padding: 9px 10px; font-size: 13px; border-radius: 6px; align-items: center; }\n.sd-row-head { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }\n.sd-table .sd-row:not(.sd-row-head) { background: var(--panel2); }\n\n/* Summary */\n.summary-hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }\n.hero-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }\n.hero-card.accent { border-color: rgba(169,100,47,0.35); }\n.hero-card.save { border-color: rgba(62,142,91,0.4); }\n.hero-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }\n.hero-value { font-family: 'Barlow Condensed'; font-size: 28px; font-weight: 700; }\n.hero-card.accent .hero-value { color: var(--accent); }\n.hero-card.save .hero-value { color: #3E8E5B; }\n\n.game-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }\n.game-bar-row {\n  display: grid; grid-template-columns: 160px 1fr 240px; align-items: center; gap: 12px; width: 100%;\n  background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 6px 8px; cursor: pointer; font-family: inherit;\n  transition: background 0.15s ease, border-color 0.15s ease;\n}\n.game-bar-row:hover { background: var(--panel2); border-color: var(--line); }\n.game-bar-row.open { background: var(--panel2); border-color: var(--line); }\n.gbr-label { display: flex; align-items: center; gap: 8px; font-size: 13px; }\n.gbr-track { height: 10px; background: var(--panel2); border-radius: 6px; overflow: hidden; }\n.gbr-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; }\n.gbr-nums { display: flex; justify-content: flex-end; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }\n.gbr-actual { color: var(--text); font-weight: 600; }\n.gbr-caret { font-size: 9px; color: var(--muted); margin-left: 2px; }\n.game-detail { background: var(--panel2); border-radius: 0 0 8px 8px; padding: 8px 16px 10px; margin: -6px 8px 4px; display: flex; flex-direction: column; gap: 4px; }\n.game-detail-row { display: grid; grid-template-columns: 1.6fr 0.8fr 1fr 1fr; gap: 10px; font-size: 12.5px; padding: 5px 4px; border-bottom: 1px dashed var(--line); }\n.game-detail-row:last-child { border-bottom: none; }\n.gdr-name { font-weight: 500; }\n.gdr-count, .gdr-unit { color: var(--muted); font-family: 'JetBrains Mono', monospace; }\n.gdr-total { text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); }\n.save-text { color: #3E8E5B; }\n.accent-text { color: var(--accent); }\n\n/* Admin */\n.sub-tabs { display: flex; gap: 8px; margin-bottom: 4px; }\n.sub-tab { background: var(--panel); border: 1px solid var(--line); color: var(--muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }\n.sub-tab.active { border-color: var(--accent); color: var(--accent); }\n.admin-section { display: flex; flex-direction: column; gap: 14px; }\n.admin-toolbar { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }\n.btn-primary { background: var(--accent); color: var(--accent-ink); border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }\n.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }\n.btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); padding: 9px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }\n.btn-ghost:hover { color: var(--text); }\n\n.edit-form { background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; padding: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }\n.ef-row { display: flex; flex-direction: column; gap: 5px; }\n.ef-row label { font-size: 11px; color: var(--muted); }\n.ef-row input, .ef-row select {\n  background: var(--panel2); border: 1px solid var(--line); color: var(--text); padding: 8px 10px; border-radius: 7px; font-size: 13px;\n  font-family: 'IBM Plex Sans Thai';\n}\n.ef-row input:focus, .ef-row select:focus { outline: none; border-color: var(--accent); }\n.ef-actions { grid-column: 1 / -1; display: flex; gap: 10px; }\n\n.admin-table { display: flex; flex-direction: column; gap: 4px; overflow-x: auto; }\n.at-row { display: grid; grid-template-columns: 110px 110px 70px 1fr 70px 110px; gap: 10px; padding: 9px 10px; font-size: 13px; border-radius: 6px; align-items: center; background: var(--panel2); }\n.at-row.streamer-cols { grid-template-columns: 1.4fr 1fr 1fr 1fr 110px; }\n.at-row.streamer-cols-photo { grid-template-columns: 40px 1.3fr 1fr 1fr 1fr 110px; }\n.photo-preview { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }\n.at-head { background: transparent; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }\n.at-actions { display: flex; gap: 6px; }\n.icon-btn { background: transparent; border: 1px solid var(--line); color: var(--muted); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }\n.icon-btn:hover { color: var(--accent); border-color: var(--accent); }\n.icon-btn.danger:hover { color: #C24444; border-color: #C24444; }\n\n/* Sync bar */\n.sync-bar {\n  display: flex; align-items: center; gap: 10px; padding: 8px 28px; font-size: 12px;\n  border-bottom: 1px solid var(--line); background: rgba(255,255,255,0.02);\n}\n.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }\n.sync-bar.syncing .sync-dot { background: #D69A3E; box-shadow: 0 0 8px rgba(214,154,62,0.6); animation: pulse 1s infinite; }\n.sync-bar.success .sync-dot { background: #3E8E5B; box-shadow: 0 0 8px rgba(62,142,91,0.5); }\n.sync-bar.error .sync-dot { background: #C24444; box-shadow: 0 0 8px rgba(194,68,68,0.5); }\n.sync-text { color: var(--muted); flex: 1; }\n.sync-bar.error .sync-text { color: #A83A3A; }\n.sync-btn {\n  background: transparent; border: 1px solid var(--line); color: var(--muted); padding: 4px 12px;\n  border-radius: 999px; font-size: 11px; cursor: pointer; white-space: nowrap;\n}\n.sync-btn:hover { color: var(--accent); border-color: var(--accent); }\n.sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }\n@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }\n\n/* Availability */\n.admin-note { font-size: 12px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }\n.av-cols { grid-template-columns: 1.2fr 0.9fr 1fr 0.8fr 1.3fr 110px; }\n.avail-badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; }\n.avail-badge.available { background: rgba(62,142,91,0.14); color: #3E8E5B; border: 1px solid rgba(62,142,91,0.35); }\n.avail-badge.unavailable { background: rgba(194,68,68,0.14); color: #C24444; border: 1px solid rgba(194,68,68,0.35); }\n.av-note { color: var(--muted); font-size: 12px; }\n.conflict-warning {\n  grid-column: 1 / -1; background: rgba(194,68,68,0.1); border: 1px solid rgba(194,68,68,0.35);\n  color: #A83A3A; padding: 8px 12px; border-radius: 8px; font-size: 12px;\n}\n.conflict-dot { margin-left: 6px; color: #C24444; cursor: default; }\n.at-row.has-conflict { box-shadow: inset 3px 0 0 #C24444; }\n.avail-block { background: var(--panel2); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }\n.avail-block-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }\n.avail-list { display: flex; flex-direction: column; gap: 6px; }\n.avail-item { display: flex; align-items: center; gap: 10px; font-size: 12px; flex-wrap: wrap; }\n.avail-date { font-family: 'JetBrains Mono', monospace; color: var(--text); }\n.avail-time { color: var(--muted); font-family: 'JetBrains Mono', monospace; }\n.avail-note-inline { color: var(--muted); font-style: italic; }\n\n@media (max-width: 900px) {\n  .cal-grid { grid-template-columns: repeat(7, minmax(40px, 1fr)); }\n  .cal-cell { min-height: 60px; padding: 5px; }\n  .cal-chips { display: none; }\n  .summary-hero { grid-template-columns: repeat(2, 1fr); }\n  .sd-stats { grid-template-columns: repeat(2, 1fr); }\n  .game-bar-row { grid-template-columns: 1fr; }\n  .dp-row { grid-template-columns: 1fr; }\n  .week-grid { grid-template-columns: 1fr; }\n  .edit-form { grid-template-columns: 1fr; }\n  .at-row { grid-template-columns: 1fr; }\n  .av-cols { grid-template-columns: 1fr; }\n}\n";
-
-const GAME_META = {
-  TalesRunner: { label: "Tales Runner", short: "TR", color: "#FF4F93", glow: "rgba(255,79,147,0.35)" },
-  WarZ:        { label: "WarZ",         short: "WZ", color: "#8FAE3D", glow: "rgba(143,174,61,0.35)" },
-  TOSM:        { label: "Tree of Savior M", short: "TS", color: "#33C7CE", glow: "rgba(51,199,206,0.35)" },
-  Cabal:       { label: "Cabal",        short: "CB", color: "#9A6BFF", glow: "rgba(154,107,255,0.35)" },
-  Zone4:       { label: "Zone4",        short: "Z4", color: "#FF8F3D", glow: "rgba(255,143,61,0.35)" },
-};
-const GAME_ORDER = ["TalesRunner", "WarZ", "TOSM", "Cabal", "Zone4"];
-const DEFAULT_PRICE = { normalPrice: 1000, discountPrice: null };
-const THAI_MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
-const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
-
-const SHEET_ID = "1WmWYWnrkjyxzAbUoGU9sv7FYonnWlWwswtBufposvXQ";
-const SHEET_GID = "1310328416";
-
-const SHEET_GAME_CODE_MAP = {
-  TR: "TalesRunner",
-  WARZ: "WarZ",
-  TOSM: "TOSM",
-  "Cabal PC": "Cabal",
-  "Cabal M": "Cabal",
-  "Zone4 Extreme": "Zone4",
-};
-
-const SHEET_NAME_FIX = {
-  "1nonch": "1nonCh",
-  "Sukieman": "sukieman",
-  "บาบายาก้า": "บาบายากา",
-  "ป๊าเฟรม90องศา": "ปาเฟรม90องศา",
-  "ฝ้ายชอบกินแซลมอน": "ฝ่ายชอบกินแซลมอน",
-  "เห็ดเน่าChannel🍄": "เห็ดเน่าChannel",
-};
-
-const THAI_MONTH_MAP = {
-  "มกราคม": 1, "ม.ค.": 1, "ม.ค": 1,
-  "กุมภาพันธ์": 2, "ก.พ.": 2, "ก.พ": 2,
-  "มีนาคม": 3, "มี.ค.": 3, "มี.ค": 3,
-  "เมษายน": 4, "เม.ย.": 4, "เม.ย": 4,
-  "พฤษภาคม": 5, "พ.ค.": 5, "พ.ค": 5,
-  "มิถุนายน": 6, "มิ.ย.": 6, "มิ.ย": 6,
-  "กรกฎาคม": 7, "ก.ค.": 7, "ก.ค": 7,
-  "สิงหาคม": 8, "ส.ค.": 8, "ส.ค": 8,
-  "กันยายน": 9, "ก.ย.": 9, "ก.ย": 9,
-  "ตุลาคม": 10, "ต.ค.": 10, "ต.ค": 10,
-  "พฤศจิกายน": 11, "พ.ย.": 11, "พ.ย": 11,
-  "ธันวาคม": 12, "ธ.ค.": 12, "ธ.ค": 12,
-};
-
-function normalizeSheetDate(raw) {
-  if (!raw) return raw;
-  const s = raw.trim();
-  // gviz literal date object format: Date(2026,6,1)  (month is 0-indexed)
-  const gvizMatch = s.match(/^Date\((\d+),\s*(\d+),\s*(\d+)/);
-  if (gvizMatch) {
-    const y = gvizMatch[1];
-    const mo = String(Number(gvizMatch[2]) + 1).padStart(2, "0");
-    const d = String(gvizMatch[3]).padStart(2, "0");
-    return `${d}/${mo}/${y}`;
+  function defaultState() {
+    return { games: [], streamers: [], schedule: [], dayStatus: {} };
   }
-  // already DD/MM/YYYY
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
-  // D/M/YYYY without leading zeros
-  const slashMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (slashMatch) {
-    let year = Number(slashMatch[3]);
-    if (year > 2400) year -= 543;
-    return `${slashMatch[1].padStart(2, "0")}/${slashMatch[2].padStart(2, "0")}/${year}`;
-  }
-  // ISO format YYYY-MM-DD
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
-  // Thai text date: "1 กรกฎาคม 2569" or "1 ก.ค. 2569" or "1ก.ค.2569"
-  const thaiMatch = s.match(/^(\d{1,2})\s*([ก-๙.]+)\s*(\d{4})$/);
-  if (thaiMatch) {
-    const day = thaiMatch[1].padStart(2, "0");
-    const month = THAI_MONTH_MAP[thaiMatch[2].trim()];
-    if (month) {
-      let year = Number(thaiMatch[3]);
-      if (year > 2400) year -= 543; // Buddhist Era -> Gregorian
-      return `${day}/${String(month).padStart(2, "0")}/${year}`;
+
+  async function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      state = JSON.parse(raw);
+      return state;
     }
-  }
-  return s;
-}
-
-function parseGvizTable(table) {
-  const entries = [];
-  let currentDate = null;
-  let idc = 1;
-  const rows = (table && table.rows) || [];
-  const getCell = (cells, i) => {
-    const cell = cells[i];
-    if (!cell) return "";
-    if (cell.f != null) return String(cell.f).trim();
-    if (cell.v != null) return String(cell.v).trim();
-    return "";
-  };
-  const getDateCell = (cells, i) => {
-    const cell = cells[i];
-    if (!cell) return "";
-    // Prefer the raw Date(y,m,d) literal when present: unambiguous, unlike locale-formatted text
-    if (cell.v != null && /^Date\(/.test(String(cell.v))) return String(cell.v);
-    if (cell.f != null) return String(cell.f).trim();
-    if (cell.v != null) return String(cell.v).trim();
-    return "";
-  };
-  for (const row of rows) {
-    const cells = row.c || [];
-    const dateRaw = getDateCell(cells, 0);
-    const time = getCell(cells, 1);
-    const game = getCell(cells, 2);
-    let streamer = getCell(cells, 4);
-    if (dateRaw) currentDate = normalizeSheetDate(dateRaw);
-    streamer = SHEET_NAME_FIX[streamer] || streamer;
-    if (!time || !game) continue;
-    const mapped = SHEET_GAME_CODE_MAP[game] || game;
-    entries.push({ id: idc++, date: currentDate, time, game: mapped, streamer, pic: "" });
-  }
-  return entries.filter((e) => e.streamer);
-}
-
-function fetchSheetViaJsonp(url, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    window.google = window.google || {};
-    window.google.visualization = window.google.visualization || {};
-    window.google.visualization.Query = window.google.visualization.Query || {};
-    const prevSetResponse = window.google.visualization.Query.setResponse;
-    let done = false;
-    let scriptEl = null;
-    let timer = null;
-    const cleanup = () => {
-      window.google.visualization.Query.setResponse = prevSetResponse;
-      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
-      if (timer) clearTimeout(timer);
-    };
-    window.google.visualization.Query.setResponse = function (response) {
-      if (done) return;
-      done = true;
-      cleanup();
-      resolve(response);
-    };
-    timer = setTimeout(() => {
-      if (done) return;
-      done = true;
-      cleanup();
-      reject(new Error("หมดเวลาโหลดข้อมูลจาก Google Sheet"));
-    }, timeoutMs || 15000);
-    scriptEl = document.createElement("script");
-    scriptEl.src = url;
-    scriptEl.onerror = () => {
-      if (done) return;
-      done = true;
-      cleanup();
-      reject(new Error("โหลดสคริปต์จาก Google Sheet ไม่สำเร็จ (เช็คการแชร์ชีท)"));
-    };
-    document.head.appendChild(scriptEl);
-  });
-}
-
-async function fetchSheetSchedule() {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${SHEET_GID}&headers=2&tqx=out:json&_cb=${Date.now()}`;
-  const response = await fetchSheetViaJsonp(url, 15000);
-  if (!response || response.status === "error") {
-    const err = response && response.errors && response.errors[0];
-    const detail = err && (err.detailed_message || err.message);
-    throw new Error(detail || "โหลดข้อมูลจาก Google Sheet ไม่สำเร็จ");
-  }
-  const entries = parseGvizTable(response.table);
-  if (entries.length === 0) throw new Error("no rows parsed");
-  const dateRe = /^\d{2}\/\d{2}\/\d{4}$/;
-  const validDateCount = entries.filter((e) => dateRe.test(e.date || "")).length;
-  if (validDateCount < entries.length * 0.9) {
-    throw new Error("รูปแบบวันที่จากชีทเปลี่ยนไป (ไม่ตรง DD/MM/YYYY) — ยกเลิกการซิงค์เพื่อป้องกันตารางว่าง");
-  }
-  return entries;
-}
-
-function mergeCarryOverPic(newEntries, oldEntries) {
-  const picLookup = {};
-  (oldEntries || []).forEach((e) => {
-    const key = e.date + "|" + e.time + "|" + e.streamer.trim().toLowerCase();
-    if (e.pic) picLookup[key] = e.pic;
-  });
-  return newEntries.map((e) => {
-    const key = e.date + "|" + e.time + "|" + e.streamer.trim().toLowerCase();
-    return picLookup[key] ? { ...e, pic: picLookup[key] } : e;
-  });
-}
-
-const RAW_STREAMER_PHOTOS = {
-  "-YuppyS`": "1n6-QSKKhgQZ_PdMlyGinXkwUEkdqRfip",
-  "กิมจิ": "17r8f1y6kVPOyqlr1sY3354PB_q_ilZGZ",
-  "Nyaruka Mirinne Vtuber Ch": "14ue6RiYmbwjZ-NZL4B1oQnWoKEzyYl3F",
-  "ฝ่ายชอบกินแซลมอน": "1nywqA5tCPBYFoaw4unDsKkC-bx_8gfcG",
-  "beam_bbbt": "1myeblxezOWCvZiPOGzpWMx4GD5MyVkJ0",
-  "yahoo": "1g63MDhiW7GJna3FDmhmlHGhdIn7qOEez",
-  "Bifernbii": "16h4_3cmQ4xXCs_7LlUK_-JHrRoS0fDFn",
-  "TPAT_Z": "175PHU2x8naNUJo9rQeBVLN4aNWtS8bG_",
-  "Lookkad Go Outside": "1ByYJvdR4NH5NBr-AQzLOTWL0cRVVWBW7",
-  "บาบายากา": "1qoMKCpXB9YRAVfCq20GHCdD71PTqxK61",
-  "SAIAIW": "1jWJMOhTd-u6xBe6fSMs-bYF3J-cfDnMw",
-  "IN GAMER": "1LDgt8SEG1jGZXffHZY9Vut8CNoWCAQ52",
-  "IP1250": "1KMXjWlr5MgPwSLJAIyut_xXS-wSSmqm3",
-  "SOFTNAJAA": "1Rfv5f0-1WHp5yWJQhvcPCHW0TaHmHMRa",
-  "BoonChu": "10oi4Bfaaa3VoIU9YjXWk6ok-yn-wejeq",
-  "BABU Channel": "1QSbA9EmvAooLEudYSrUr6xyK0oGjfFKe",
-  "mlne.pang": "1eNf-_QSeMf0jDQL47us1M0eTOCbNjcrw",
-  "บ้านนอกคอกนา": "1IJhWOcteR7CTxN9Fexth4rcwXoayXlmF",
-  "Zeztz": "1TlU8FXGjY9XLcZmT6KMwWNzE3JM_n_d9",
-  "TumSoyedx2": "1J8JE2tBkWIgSs06AWBw518jhCpt5zMov",
-  "MCEX": "13nFmWe4nOovHUa_JUJJoeawXIfcXEg-c",
-  "ปาเฟรม90องศา": "11bd3ZkKIXMUszl0M-lYD1HLcTtuAOJOH",
-  "Saifahsmd": "1bzRNssvN27ws6MY5J_7g5H0-i6sXg8AO",
-  "NEWX": "1j9Ly-dmVasVOoYptG4fuH7O7_ei1EoBx",
-  "Richie Gamer": "1yQZWXBBlUNAdYc9iUhjyW4RWvF4pAxMe",
-  "Alice Wonder Game": "1U7P3tzVD-gCThgyNxngxA1rRgF3QNBrK",
-  "rainbykello": "1BJy8xFJx51XnqAMRgvek6m0gIesV1BQY",
-  "ARMZIP": "1KJI6m3coVuQgfid8H21ImjwiixhAbgCt",
-  "Queen of Pink": "1tQ6-I1RLzlcLeW-Qe8pgFLhAS4ANTvEh",
-  "Fanta": "13scDwlRqa3Em1t-cL7xDBImlVQ_PcyhO",
-  "KIKIKO63": "1LFMkWBhjHnuLxIWR6EvKow54s0dgGzgm",
-};
-
-function driveImageUrl(idOrUrl) {
-  if (!idOrUrl) return null;
-  let id = idOrUrl.trim();
-  const m = id.match(/\/d\/([a-zA-Z0-9_-]{10,})/) || id.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
-  if (m) id = m[1];
-  if (!/^[a-zA-Z0-9_-]{10,}$/.test(id)) return null;
-  return `https://lh3.googleusercontent.com/d/${id}=w300`;
-}
-
-function parseDMY(d) {
-  const [dd, mm, yyyy] = d.split("/").map(Number);
-  return new Date(yyyy, mm - 1, dd);
-}
-function fmtDMY(date) {
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  return `${dd}/${mm}/${date.getFullYear()}`;
-}
-function fmtMoney(n) {
-  return "฿" + Math.round(n).toLocaleString("en-US");
-}
-function timeStart(t) {
-  return t.split("-")[0].trim();
-}
-function timeToMin(hm) {
-  const [h, m] = hm.trim().split(".").map(Number);
-  return (h || 0) * 60 + (m || 0);
-}
-function parseTimeRange(t) {
-  const [a, b] = t.split("-").map((s) => s.trim());
-  let start = timeToMin(a);
-  let end = timeToMin(b);
-  if (end <= start) end += 24 * 60;
-  return [start, end];
-}
-function rangesOverlap(t1, t2) {
-  try {
-    const [s1, e1] = parseTimeRange(t1);
-    const [s2, e2] = parseTimeRange(t2);
-    return s1 < e2 && s2 < e1;
-  } catch (e) {
-    return false;
-  }
-}
-
-async function storageGet(key, shared) {
-  if (typeof window !== "undefined" && window.storage && typeof window.storage.get === "function") {
     try {
-      return await window.storage.get(key, shared);
+      const res = await fetch("data/seed.json");
+      state = await res.json();
     } catch (e) {
-      // fall through to localStorage
+      state = defaultState();
     }
+    save();
+    return state;
   }
-  try {
-    const raw = window.localStorage.getItem((shared ? "shared:" : "priv:") + key);
-    if (raw === null) return null;
-    return { key, value: raw, shared: !!shared };
-  } catch (e) {
-    return null;
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
-}
 
-async function storageSet(key, value, shared) {
-  if (typeof window !== "undefined" && window.storage && typeof window.storage.set === "function") {
-    try {
-      const res = await window.storage.set(key, value, shared);
-      if (res) return res;
-    } catch (e) {
-      // fall through to localStorage
-    }
+  function get() {
+    return state;
   }
-  try {
-    window.localStorage.setItem((shared ? "shared:" : "priv:") + key, value);
-    return { key, value, shared: !!shared };
-  } catch (e) {
-    return null;
+
+  function uid(prefix) {
+    return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
-}
 
-function useStorage() {
-  const [schedule, setSchedule] = React.useState(null);
-  const [streamers, setStreamers] = React.useState(null);
-  const [availability, setAvailability] = React.useState(null);
-  const [photos, setPhotos] = React.useState(null);
-  const [loaded, setLoaded] = React.useState(false);
-  const [saveError, setSaveError] = React.useState(false);
-  const [syncStatus, setSyncStatus] = React.useState("idle"); // idle | syncing | success | error
-  const [lastSynced, setLastSynced] = React.useState(null);
-  const [syncErrorMsg, setSyncErrorMsg] = React.useState("");
+  // ---------- Games ----------
+  function listGames() {
+    return state.games;
+  }
+  function getGame(id) {
+    return state.games.find((g) => g.id === id);
+  }
+  function addGame(g) {
+    const game = { id: uid("g"), name: g.name, fullName: g.fullName || g.name, color: g.color || "#64748b" };
+    state.games.push(game);
+    save();
+    return game;
+  }
+  function updateGame(id, patch) {
+    const g = getGame(id);
+    if (!g) return;
+    Object.assign(g, patch);
+    save();
+  }
 
-  React.useEffect(() => {
-    (async () => {
-      let sc = null, st = null, av = null, ph = null, lastSyncedCached = null;
-      try {
-        const r = await storageGet("schedule_v1", false);
-        if (r && r.value) sc = JSON.parse(r.value);
-      } catch (e) {}
-      try {
-        const r = await storageGet("streamers_v1", false);
-        if (r && r.value) st = JSON.parse(r.value);
-      } catch (e) {}
-      try {
-        const r = await storageGet("availability_v1", false);
-        if (r && r.value) av = JSON.parse(r.value);
-      } catch (e) {}
-      try {
-        const r = await storageGet("streamer_photos_v1", true);
-        if (r && r.value) ph = JSON.parse(r.value);
-      } catch (e) {}
-      try {
-        const r = await storageGet("last_synced_v1", false);
-        if (r && r.value) lastSyncedCached = r.value;
-      } catch (e) {}
-      setSchedule(sc || RAW_SCHEDULE);
-      setStreamers(st || RAW_STREAMERS);
-      setAvailability(av || []);
-      setPhotos(ph || RAW_STREAMER_PHOTOS);
-      setLastSynced(lastSyncedCached);
-      setLoaded(true);
-    })();
-  }, []);
+  // ---------- Streamers ----------
+  function listStreamers() {
+    return state.streamers;
+  }
+  function getStreamer(id) {
+    return state.streamers.find((s) => s.id === id);
+  }
+  function addStreamer(name) {
+    const s = { id: uid("s"), name, photo: null, prices: [] };
+    state.streamers.push(s);
+    save();
+    return s;
+  }
+  function updateStreamer(id, patch) {
+    const s = getStreamer(id);
+    if (!s) return;
+    Object.assign(s, patch);
+    save();
+  }
+  function deleteStreamer(id) {
+    state.streamers = state.streamers.filter((s) => s.id !== id);
+    state.schedule = state.schedule.filter((e) => e.streamerId !== id);
+    save();
+  }
 
-  const persist = React.useCallback(async (key, value, shared) => {
-    try {
-      const res = await storageSet(key, JSON.stringify(value), !!shared);
-      if (!res) setSaveError(true);
-    } catch (e) {
-      setSaveError(true);
+  // ---------- Prices (per streamer, per game) ----------
+  function setPrice(streamerId, gameId, normalPrice, discountPrice) {
+    const s = getStreamer(streamerId);
+    if (!s) return;
+    let p = s.prices.find((p) => p.gameId === gameId);
+    if (!p) {
+      p = { gameId, normalPrice: 0, discountPrice: null };
+      s.prices.push(p);
     }
-  }, []);
+    p.normalPrice = normalPrice;
+    p.discountPrice = discountPrice === "" || discountPrice === null || discountPrice === undefined ? null : discountPrice;
+    save();
+  }
+  function deletePrice(streamerId, gameId) {
+    const s = getStreamer(streamerId);
+    if (!s) return;
+    s.prices = s.prices.filter((p) => p.gameId !== gameId);
+    save();
+  }
+  function getPrice(streamerId, gameId) {
+    const s = getStreamer(streamerId);
+    if (!s) return null;
+    return s.prices.find((p) => p.gameId === gameId) || null;
+  }
+  // Effective price used for totals: discount price if set, otherwise normal price.
+  function effectivePrice(streamerId, gameId) {
+    const p = getPrice(streamerId, gameId);
+    if (!p) return { normal: 0, actual: 0 };
+    const normal = Number(p.normalPrice) || 0;
+    const actual = p.discountPrice !== null && p.discountPrice !== undefined && p.discountPrice !== "" ? Number(p.discountPrice) : normal;
+    return { normal, actual };
+  }
 
-  const updateSchedule = React.useCallback((next) => {
-    setSchedule(next);
-    persist("schedule_v1", next, false);
-  }, [persist]);
+  // ---------- Schedule ----------
+  function listSchedule() {
+    return state.schedule;
+  }
+  function listScheduleByDate(date) {
+    return state.schedule.filter((e) => e.date === date);
+  }
+  function listScheduleByMonth(year, month) {
+    const prefix = `${year}-${String(month).padStart(2, "0")}`;
+    return state.schedule.filter((e) => e.date.startsWith(prefix));
+  }
+  function addScheduleEntry(entry) {
+    const e = { id: uid("e"), date: entry.date, time: entry.time || "", gameId: entry.gameId, streamerId: entry.streamerId, program: entry.program || "", isTournament: !!entry.isTournament };
+    state.schedule.push(e);
+    save();
+    return e;
+  }
+  function updateScheduleEntry(id, patch) {
+    const e = state.schedule.find((e) => e.id === id);
+    if (!e) return;
+    Object.assign(e, patch);
+    save();
+  }
+  function deleteScheduleEntry(id) {
+    state.schedule = state.schedule.filter((e) => e.id !== id);
+    save();
+  }
+  function setEntryTournament(id, isTournament) {
+    const e = state.schedule.find((e) => e.id === id);
+    if (!e) return;
+    e.isTournament = isTournament;
+    save();
+  }
 
-  const updateStreamers = React.useCallback((next) => {
-    setStreamers(next);
-    persist("streamers_v1", next, false);
-  }, [persist]);
-
-  const updateAvailability = React.useCallback((next) => {
-    setAvailability(next);
-    persist("availability_v1", next, false);
-  }, [persist]);
-
-  const updatePhotos = React.useCallback((next) => {
-    setPhotos(next);
-    persist("streamer_photos_v1", next, true);
-  }, [persist]);
-
-  const syncNow = React.useCallback(async () => {
-    setSyncStatus("syncing");
-    setSyncErrorMsg("");
-    try {
-      const sheetEntries = await fetchSheetSchedule();
-      setSchedule((current) => {
-        const merged = mergeCarryOverPic(sheetEntries, current || []);
-        persist("schedule_v1", merged, false);
-        return merged;
-      });
-      const now = new Date().toISOString();
-      setLastSynced(now);
-      try {
-        await storageSet("last_synced_v1", now, false);
-      } catch (e) {}
-      setSyncStatus("success");
-    } catch (e) {
-      setSyncStatus("error");
-      setSyncErrorMsg(String(e && e.message ? e.message : e));
+  // ---------- Day status: normal | no_live (whole day cancelled) ----------
+  function getDayStatus(date) {
+    return state.dayStatus[date] || "normal";
+  }
+  function setDayStatus(date, status) {
+    if (status === "normal") {
+      delete state.dayStatus[date];
+    } else {
+      state.dayStatus[date] = status;
     }
-  }, [persist]);
+    save();
+  }
 
-  React.useEffect(() => {
-    if (loaded) {
-      syncNow();
-      const intervalId = setInterval(() => {
-        syncNow();
-      }, 30000); // auto re-sync every 30 seconds while the app is open
-      return () => clearInterval(intervalId);
+  // Cost of a single schedule entry, accounting for day cancellation and per-entry tournament (free) status.
+  function getEntryCost(entry) {
+    if (getDayStatus(entry.date) === "no_live") {
+      return { normal: 0, actual: 0, excluded: true, free: false };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded]);
+    if (entry.isTournament) {
+      return { normal: 0, actual: 0, excluded: false, free: true };
+    }
+    const price = effectivePrice(entry.streamerId, entry.gameId);
+    return { normal: price.normal, actual: price.actual, excluded: false, free: false };
+  }
+
+  // ---------- Import/Export ----------
+  function exportJSON() {
+    return JSON.stringify(state, null, 2);
+  }
+  function importJSON(json) {
+    const parsed = JSON.parse(json);
+    state = parsed;
+    save();
+  }
+  function resetToSeed() {
+    localStorage.removeItem(STORAGE_KEY);
+    return load();
+  }
 
   return {
-    schedule, streamers, availability, photos, loaded,
-    updateSchedule, updateStreamers, updateAvailability, updatePhotos, saveError,
-    syncStatus, lastSynced, syncErrorMsg, syncNow,
+    load, save, get, uid,
+    listGames, getGame, addGame, updateGame,
+    listStreamers, getStreamer, addStreamer, updateStreamer, deleteStreamer,
+    setPrice, deletePrice, getPrice, effectivePrice,
+    listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
+    getDayStatus, setDayStatus, getEntryCost,
+    exportJSON, importJSON, resetToSeed,
   };
-}
-
-function Avatar({ name, photos, size }) {
-  const url = photos && photos[name] ? driveImageUrl(photos[name]) : null;
-  const dim = size || 34;
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={name}
-        className="avatar-img"
-        style={{ width: dim, height: dim }}
-        onError={(e) => { e.target.style.display = "none"; e.target.nextSibling && (e.target.nextSibling.style.display = "flex"); }}
-      />
-    );
-  }
-  return (
-    <div className="avatar-fallback" style={{ width: dim, height: dim, fontSize: dim * 0.42 }}>
-      {(name || "?").trim().slice(0, 1).toUpperCase()}
-    </div>
-  );
-}
-
-function getPrice(streamers, name) {
-  const s = streamers[name] || DEFAULT_PRICE;
-  const normal = s.normalPrice ?? DEFAULT_PRICE.normalPrice;
-  const discount = (s.discountPrice ?? null);
-  const actual = discount != null ? discount : normal;
-  return { normal, discount, actual };
-}
-
-function Chip({ game }) {
-  const meta = GAME_META[game] || { label: game, color: "#888", short: "?" };
-  return (
-    <span className="chip" style={{ "--gc": meta.color, "--gg": meta.glow }}>
-      <span className="chip-dot" />{meta.short}
-    </span>
-  );
-}
-
-function TopNav({ tab, setTab }) {
-  const tabs = [
-    ["dashboard", "ปฏิทิน"],
-    ["streamers", "Streamer"],
-    ["summary", "สรุปเดือน"],
-    ["admin", "หลังบ้าน"],
-  ];
-  return (
-    <div className="topnav">
-      <div className="brand">
-        <span className="brand-mark">◈</span>
-        <div className="brand-text">
-          <div className="brand-title">STREAM/OPS</div>
-          <div className="brand-sub">Live Schedule &amp; Budget Console <span className="build-tag">build 2026-07-16-06</span></div>
-        </div>
-      </div>
-      <div className="tabs">
-        {tabs.map(([id, label]) => (
-          <button key={id} className={"tab" + (tab === id ? " active" : "")} onClick={() => setTab(id)}>
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MonthPicker({ year, month, setYear, setMonth }) {
-  const shift = (delta) => {
-    let m = month + delta, y = year;
-    if (m < 0) { m = 11; y -= 1; }
-    if (m > 11) { m = 0; y += 1; }
-    setMonth(m); setYear(y);
-  };
-  return (
-    <div className="month-picker">
-      <button className="mp-btn" onClick={() => shift(-1)}>‹</button>
-      <div className="mp-label">{THAI_MONTHS[month]} {year + 543}</div>
-      <button className="mp-btn" onClick={() => shift(1)}>›</button>
-    </div>
-  );
-}
-
-function Legend() {
-  return (
-    <div className="legend">
-      {GAME_ORDER.map((g) => (
-        <div className="legend-item" key={g}>
-          <span className="legend-dot" style={{ background: GAME_META[g].color }} />
-          {GAME_META[g].label}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Dashboard({ schedule, streamers, year, month, setYear, setMonth }) {
-  const [selectedDay, setSelectedDay] = React.useState(null);
-  const [view, setView] = React.useState("month");
-  const [gameFilter, setGameFilter] = React.useState("all");
-
-  const filteredSchedule = React.useMemo(() => {
-    return gameFilter === "all" ? schedule : schedule.filter((e) => e.game === gameFilter);
-  }, [schedule, gameFilter]);
-
-  const byDate = React.useMemo(() => {
-    const map = {};
-    filteredSchedule.forEach((e) => {
-      (map[e.date] = map[e.date] || []).push(e);
-    });
-    Object.values(map).forEach((arr) => arr.sort((a, b) => timeStart(a.time).localeCompare(timeStart(b.time))));
-    return map;
-  }, [filteredSchedule]);
-
-  const first = new Date(year, month, 1);
-  const startWeekday = first.getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells = [];
-  for (let i = 0; i < startWeekday; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-
-  const todayStr = fmtDMY(new Date());
-
-  const selectedEntries = selectedDay ? (byDate[selectedDay] || []) : [];
-
-  React.useEffect(() => { setSelectedDay(null); }, [year, month]);
-
-  const weekDates = React.useMemo(() => {
-    const base = selectedDay ? parseDMY(selectedDay) : new Date(year, month, Math.min(new Date().getDate(), daysInMonth));
-    const dow = base.getDay();
-    const monday = new Date(base);
-    monday.setDate(base.getDate() - dow);
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return d;
-    });
-  }, [selectedDay, year, month]);
-
-  return (
-    <div className="dash">
-      <div className="dash-head">
-        <MonthPicker year={year} month={month} setYear={setYear} setMonth={setMonth} />
-        <div className="view-toggle">
-          <button className={view === "month" ? "vt active" : "vt"} onClick={() => setView("month")}>รายเดือน</button>
-          <button className={view === "week" ? "vt active" : "vt"} onClick={() => setView("week")}>รายสัปดาห์</button>
-        </div>
-        <div className="game-filter">
-          <button className={"gf-btn" + (gameFilter === "all" ? " active" : "")} onClick={() => setGameFilter("all")}>ทั้งหมด</button>
-          {GAME_ORDER.map((g) => (
-            <button
-              key={g}
-              className={"gf-btn" + (gameFilter === g ? " active" : "")}
-              style={{ "--gc": GAME_META[g].color }}
-              onClick={() => setGameFilter(g)}
-            >
-              {GAME_META[g].label}
-            </button>
-          ))}
-        </div>
-        <Legend />
-      </div>
-
-      {view === "month" && (
-        <div className="cal-grid">
-          {THAI_DOW.map((d) => <div className="cal-dow" key={d}>{d}</div>)}
-          {cells.map((d, i) => {
-            if (d === null) return <div className="cal-cell empty" key={"e" + i} />;
-            const dateObj = new Date(year, month, d);
-            const dateStr = fmtDMY(dateObj);
-            const entries = byDate[dateStr] || [];
-            const games = [...new Set(entries.map((e) => e.game))];
-            const isToday = dateStr === todayStr;
-            return (
-              <button
-                key={dateStr}
-                className={"cal-cell" + (isToday ? " today" : "") + (selectedDay === dateStr ? " selected" : "")}
-                onClick={() => setSelectedDay(dateStr)}
-              >
-                <div className="cal-daynum">{d}</div>
-                <div className="cal-chips">
-                  {games.slice(0, 5).map((g) => <Chip game={g} key={g} />)}
-                </div>
-                {entries.length > 0 && <div className="cal-count">{entries.length} คิว</div>}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {view === "week" && (
-        <div className="week-grid">
-          {weekDates.map((d) => {
-            const dateStr = fmtDMY(d);
-            const entries = (byDate[dateStr] || []);
-            const isToday = dateStr === todayStr;
-            return (
-              <div className={"week-col" + (isToday ? " today" : "")} key={dateStr}>
-                <div className="week-col-head">
-                  <div className="week-dow">{THAI_DOW[d.getDay()]}</div>
-                  <div className="week-daynum">{d.getDate()}</div>
-                </div>
-                <div className="week-entries">
-                  {entries.length === 0 && <div className="week-empty">—</div>}
-                  {entries.map((e) => (
-                    <div className="week-entry" key={e.id} style={{ "--gc": GAME_META[e.game]?.color || "#888" }}>
-                      <div className="we-time">{e.time}</div>
-                      <div className="we-game">{GAME_META[e.game]?.label || e.game}</div>
-                      <div className="we-streamer">{e.streamer || "—"}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {selectedDay && view === "month" && (
-        <div className="day-panel">
-          <div className="day-panel-head">
-            <div className="dp-title">รายการไลฟ์วันที่ {selectedDay}</div>
-            <button className="dp-close" onClick={() => setSelectedDay(null)}>ปิด ✕</button>
-          </div>
-          {selectedEntries.length === 0 && <div className="dp-empty">ยังไม่มีคิวไลฟ์ในวันนี้</div>}
-          <div className="dp-list">
-            {selectedEntries.map((e) => {
-              const price = getPrice(streamers, e.streamer);
-              return (
-                <div className="dp-row" key={e.id} style={{ "--gc": GAME_META[e.game]?.color || "#888" }}>
-                  <div className="dp-time">{e.time}</div>
-                  <Chip game={e.game} />
-                  <div className="dp-streamer">{e.streamer || "— ว่าง —"}</div>
-                  <div className="dp-pic">{e.pic && `PIC: ${e.pic}`}</div>
-                  {e.streamer && <div className="dp-price">{fmtMoney(price.actual)}</div>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StreamersPage({ schedule, streamers, availability, photos, year, month }) {
-  const [query, setQuery] = React.useState("");
-  const [sel, setSel] = React.useState(null);
-
-  const monthEntries = React.useMemo(() => {
-    return schedule.filter((e) => {
-      const d = parseDMY(e.date);
-      return d.getFullYear() === year && d.getMonth() === month && e.streamer;
-    });
-  }, [schedule, year, month]);
-
-  const perStreamer = React.useMemo(() => {
-    const map = {};
-    monthEntries.forEach((e) => {
-      map[e.streamer] = map[e.streamer] || [];
-      map[e.streamer].push(e);
-    });
-    return map;
-  }, [monthEntries]);
-
-  const names = React.useMemo(() => {
-    const set = new Set([...Object.keys(perStreamer), ...Object.keys(streamers)]);
-    return [...set].sort((a, b) => a.localeCompare(b, "th"));
-  }, [perStreamer, streamers]);
-
-  const filtered = names.filter((n) => n.toLowerCase().includes(query.toLowerCase()));
-
-  if (sel) {
-    const entries = (perStreamer[sel] || []).sort((a, b) => parseDMY(a.date) - parseDMY(b.date) || timeStart(a.time).localeCompare(timeStart(b.time)));
-    const price = getPrice(streamers, sel);
-    const totalActual = entries.length * price.actual;
-    const totalNormal = entries.length * price.normal;
-    const gamesUsed = [...new Set(entries.map((e) => e.game))];
-    return (
-      <div className="page">
-        <button className="back-link" onClick={() => setSel(null)}>‹ กลับไปหน้ารายชื่อ Streamer</button>
-        <div className="streamer-detail">
-          <div className="sd-head">
-            <div className="sd-avatar"><Avatar name={sel} photos={photos} size={54} /></div>
-            <div>
-              <div className="sd-name">{sel}</div>
-              <div className="sd-games">{gamesUsed.map((g) => <Chip game={g} key={g} />)}</div>
-            </div>
-          </div>
-          <div className="sd-stats">
-            <div className="stat">
-              <div className="stat-label">ราคาปกติ / คิว</div>
-              <div className="stat-value">{fmtMoney(price.normal)}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">ราคาที่ใช้จริง / คิว</div>
-              <div className="stat-value accent">{fmtMoney(price.actual)}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">จำนวนคิวเดือนนี้</div>
-              <div className="stat-value">{entries.length}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">ยอดรวมเดือนนี้</div>
-              <div className="stat-value accent">{fmtMoney(totalActual)}</div>
-            </div>
-          </div>
-          {price.discount != null && (
-            <div className="savings-note">ประหยัดจากส่วนลด {fmtMoney(totalNormal - totalActual)} เมื่อเทียบราคาปกติ</div>
-          )}
-
-          {(() => {
-            const avList = (availability || [])
-              .filter((a) => a.streamer.trim().toLowerCase() === sel.trim().toLowerCase())
-              .sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
-            if (avList.length === 0) return null;
-            return (
-              <div className="avail-block">
-                <div className="avail-block-title">วันสะดวก / ไม่สะดวก</div>
-                <div className="avail-list">
-                  {avList.map((a) => (
-                    <div className="avail-item" key={a.id}>
-                      <span className={"avail-badge " + a.status}>{a.status === "available" ? "สะดวก" : "ไม่สะดวก"}</span>
-                      <span className="avail-date">{a.date}</span>
-                      <span className="avail-time">{a.time}</span>
-                      {a.note && <span className="avail-note-inline">{a.note}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          <div className="sd-table">
-            <div className="sd-row sd-row-head">
-              <div>วันที่</div><div>เวลา</div><div>เกม</div><div>PIC</div><div>ราคา</div>
-            </div>
-            {entries.length === 0 && <div className="dp-empty">ไม่มีคิวในเดือนนี้</div>}
-            {entries.map((e) => (
-              <div className="sd-row" key={e.id}>
-                <div>{e.date}</div>
-                <div>{e.time}</div>
-                <div><Chip game={e.game} /></div>
-                <div>{e.pic || "—"}</div>
-                <div>{fmtMoney(price.actual)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="page">
-      <div className="page-head">
-        <div className="page-title">รายชื่อ Streamer</div>
-        <input className="search" placeholder="ค้นหาชื่อ Streamer..." value={query} onChange={(e) => setQuery(e.target.value)} />
-      </div>
-      <div className="streamer-grid">
-        {filtered.map((n) => {
-          const price = getPrice(streamers, n);
-          const count = (perStreamer[n] || []).length;
-          return (
-            <button className="streamer-card" key={n} onClick={() => setSel(n)}>
-              <div className="sc-avatar"><Avatar name={n} photos={photos} size={34} /></div>
-              <div className="sc-name">{n}</div>
-              <div className="sc-meta">
-                <span>{count} คิว/เดือนนี้</span>
-                <span className="sc-price">{fmtMoney(price.actual)}{price.discount != null && <s className="sc-old"> {fmtMoney(price.normal)}</s>}</span>
-              </div>
-            </button>
-          );
-        })}
-        {filtered.length === 0 && <div className="dp-empty">ไม่พบ Streamer ที่ค้นหา</div>}
-      </div>
-    </div>
-  );
-}
-
-function Summary({ schedule, streamers, year, month }) {
-  const [expandedGame, setExpandedGame] = React.useState(null);
-
-  const monthEntries = React.useMemo(() => {
-    return schedule.filter((e) => {
-      const d = parseDMY(e.date);
-      return d.getFullYear() === year && d.getMonth() === month && e.streamer;
-    });
-  }, [schedule, year, month]);
-
-  const byGame = React.useMemo(() => {
-    const map = {};
-    GAME_ORDER.forEach((g) => map[g] = { count: 0, normal: 0, actual: 0 });
-    monthEntries.forEach((e) => {
-      const price = getPrice(streamers, e.streamer);
-      if (!map[e.game]) map[e.game] = { count: 0, normal: 0, actual: 0 };
-      map[e.game].count += 1;
-      map[e.game].normal += price.normal;
-      map[e.game].actual += price.actual;
-    });
-    return map;
-  }, [monthEntries, streamers]);
-
-  const perGameStreamers = React.useMemo(() => {
-    const map = {};
-    monthEntries.forEach((e) => {
-      map[e.game] = map[e.game] || {};
-      map[e.game][e.streamer] = (map[e.game][e.streamer] || 0) + 1;
-    });
-    const out = {};
-    Object.entries(map).forEach(([game, counts]) => {
-      out[game] = Object.entries(counts)
-        .map(([name, count]) => {
-          const price = getPrice(streamers, name);
-          return { name, count, unitActual: price.actual, unitNormal: price.normal, total: count * price.actual };
-        })
-        .sort((a, b) => b.total - a.total);
-    });
-    return out;
-  }, [monthEntries, streamers]);
-
-  const totalNormal = Object.values(byGame).reduce((a, b) => a + b.normal, 0);
-  const totalActual = Object.values(byGame).reduce((a, b) => a + b.actual, 0);
-  const totalCount = Object.values(byGame).reduce((a, b) => a + b.count, 0);
-  const savings = totalNormal - totalActual;
-
-  return (
-    <div className="page">
-      <div className="page-title">สรุปงบประมาณประจำเดือน {THAI_MONTHS[month]} {year + 543}</div>
-
-      <div className="summary-hero">
-        <div className="hero-card">
-          <div className="hero-label">ยอดรวมราคาปกติ</div>
-          <div className="hero-value">{fmtMoney(totalNormal)}</div>
-        </div>
-        <div className="hero-card accent">
-          <div className="hero-label">ยอดรวมที่จ่ายจริง</div>
-          <div className="hero-value">{fmtMoney(totalActual)}</div>
-        </div>
-        <div className="hero-card save">
-          <div className="hero-label">ประหยัดได้</div>
-          <div className="hero-value">{fmtMoney(savings)}</div>
-        </div>
-        <div className="hero-card">
-          <div className="hero-label">จำนวนคิวทั้งหมด</div>
-          <div className="hero-value">{totalCount}</div>
-        </div>
-      </div>
-
-      <div className="game-bars">
-        {GAME_ORDER.map((g) => {
-          const stat = byGame[g] || { count: 0, normal: 0, actual: 0 };
-          const pct = totalActual > 0 ? (stat.actual / totalActual) * 100 : 0;
-          const isOpen = expandedGame === g;
-          return (
-            <div key={g}>
-              <button
-                className={"game-bar-row" + (isOpen ? " open" : "")}
-                onClick={() => setExpandedGame(isOpen ? null : g)}
-              >
-                <div className="gbr-label"><Chip game={g} /> {GAME_META[g].label}</div>
-                <div className="gbr-track">
-                  <div className="gbr-fill" style={{ width: pct + "%", background: GAME_META[g].color }} />
-                </div>
-                <div className="gbr-nums">
-                  <span>{stat.count} คิว</span>
-                  <span className="gbr-actual">{fmtMoney(stat.actual)}</span>
-                  {stat.normal !== stat.actual && <s className="gbr-old">{fmtMoney(stat.normal)}</s>}
-                  <span className="gbr-caret">{isOpen ? "▲" : "▼"}</span>
-                </div>
-              </button>
-              {isOpen && (
-                <div className="game-detail">
-                  {(perGameStreamers[g] || []).length === 0 && <div className="dp-empty">ไม่มีคิวในเดือนนี้</div>}
-                  {(perGameStreamers[g] || []).map((s) => (
-                    <div className="game-detail-row" key={s.name}>
-                      <div className="gdr-name">{s.name}</div>
-                      <div className="gdr-count">{s.count} คิว</div>
-                      <div className="gdr-unit">{fmtMoney(s.unitActual)} / คิว</div>
-                      <div className="gdr-total">{fmtMoney(s.total)}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="page-title small">สรุปแยกตามเกม</div>
-      <div className="sd-table">
-        <div className="sd-row sd-row-head">
-          <div>เกม</div><div>จำนวนคิว</div><div>ราคาปกติรวม</div><div>ราคาจริงรวม</div><div>ประหยัด</div>
-        </div>
-        {GAME_ORDER.map((g) => {
-          const stat = byGame[g] || { count: 0, normal: 0, actual: 0 };
-          return (
-            <div className="sd-row" key={g}>
-              <div><Chip game={g} /> {GAME_META[g].label}</div>
-              <div>{stat.count}</div>
-              <div>{fmtMoney(stat.normal)}</div>
-              <div>{fmtMoney(stat.actual)}</div>
-              <div className={stat.normal - stat.actual > 0 ? "save-text" : ""}>{fmtMoney(stat.normal - stat.actual)}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function findConflicts(availability, streamer, date, time) {
-  if (!streamer) return [];
-  return availability.filter((a) =>
-    a.streamer.trim().toLowerCase() === streamer.trim().toLowerCase() &&
-    a.date === date &&
-    a.status === "unavailable" &&
-    rangesOverlap(a.time, time)
-  );
-}
-
-function AdminSchedule({ schedule, updateSchedule, streamers, availability }) {
-  const [filterDate, setFilterDate] = React.useState("");
-  const [editing, setEditing] = React.useState(null);
-  const [draft, setDraft] = React.useState(null);
-
-  const blank = () => ({
-    id: Date.now(),
-    date: "01/07/2026",
-    time: "14.00 - 16.00",
-    game: "TalesRunner",
-    streamer: "",
-    pic: "",
-  });
-
-  const startNew = () => { setDraft(blank()); setEditing("new"); };
-  const startEdit = (e) => { setDraft({ ...e }); setEditing(e.id); };
-  const cancel = () => { setEditing(null); setDraft(null); };
-
-  const save = () => {
-    if (editing === "new") {
-      updateSchedule([...schedule, draft]);
-    } else {
-      updateSchedule(schedule.map((e) => (e.id === editing ? draft : e)));
-    }
-    cancel();
-  };
-
-  const remove = (id) => {
-    updateSchedule(schedule.filter((e) => e.id !== id));
-  };
-
-  const filtered = schedule
-    .filter((e) => !filterDate || e.date === filterDate)
-    .sort((a, b) => parseDMY(a.date) - parseDMY(b.date) || timeStart(a.time).localeCompare(timeStart(b.time)));
-
-  return (
-    <div className="admin-section">
-      <div className="admin-toolbar">
-        <input className="search" placeholder="กรองตามวันที่ (DD/MM/YYYY)" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
-        <button className="btn-primary" onClick={startNew}>+ เพิ่มคิวไลฟ์</button>
-      </div>
-
-      {editing && (
-        <div className="edit-form">
-          <div className="ef-row">
-            <label>วันที่ (DD/MM/YYYY)</label>
-            <input value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
-          </div>
-          <div className="ef-row">
-            <label>เวลา</label>
-            <input value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} />
-          </div>
-          <div className="ef-row">
-            <label>เกม</label>
-            <select value={draft.game} onChange={(e) => setDraft({ ...draft, game: e.target.value })}>
-              {GAME_ORDER.map((g) => <option key={g} value={g}>{GAME_META[g].label}</option>)}
-            </select>
-          </div>
-          <div className="ef-row">
-            <label>ชื่อ Streamer</label>
-            <input list="streamer-names" value={draft.streamer} onChange={(e) => setDraft({ ...draft, streamer: e.target.value })} />
-            <datalist id="streamer-names">
-              {Object.keys(streamers).map((n) => <option value={n} key={n} />)}
-            </datalist>
-          </div>
-          <div className="ef-row">
-            <label>PIC</label>
-            <input value={draft.pic} onChange={(e) => setDraft({ ...draft, pic: e.target.value })} />
-          </div>
-          {draft.streamer && findConflicts(availability, draft.streamer, draft.date, draft.time).length > 0 && (
-            <div className="conflict-warning">
-              ⚠ {draft.streamer} แจ้งไม่สะดวกช่วงนี้ ({findConflicts(availability, draft.streamer, draft.date, draft.time).map((c) => c.time).join(", ")})
-            </div>
-          )}
-          <div className="ef-actions">
-            <button className="btn-primary" onClick={save}>บันทึก</button>
-            <button className="btn-ghost" onClick={cancel}>ยกเลิก</button>
-          </div>
-        </div>
-      )}
-
-      <div className="admin-table">
-        <div className="at-row at-head">
-          <div>วันที่</div><div>เวลา</div><div>เกม</div><div>Streamer</div><div>PIC</div><div></div>
-        </div>
-        {filtered.map((e) => {
-          const conflicts = findConflicts(availability, e.streamer, e.date, e.time);
-          return (
-            <div className={"at-row" + (conflicts.length ? " has-conflict" : "")} key={e.id}>
-              <div>{e.date}</div>
-              <div>{e.time}</div>
-              <div><Chip game={e.game} /></div>
-              <div>{e.streamer || "—"}{conflicts.length > 0 && <span className="conflict-dot" title="ไม่สะดวกช่วงนี้">⚠</span>}</div>
-              <div>{e.pic || "—"}</div>
-              <div className="at-actions">
-                <button className="icon-btn" onClick={() => startEdit(e)}>แก้ไข</button>
-                <button className="icon-btn danger" onClick={() => remove(e.id)}>ลบ</button>
-              </div>
-            </div>
-          );
-        })}
-        {filtered.length === 0 && <div className="dp-empty">ไม่พบข้อมูล</div>}
-      </div>
-    </div>
-  );
-}
-
-function AdminStreamers({ streamers, updateStreamers, photos, updatePhotos }) {
-  const [query, setQuery] = React.useState("");
-  const [editing, setEditing] = React.useState(null);
-  const [draft, setDraft] = React.useState(null);
-
-  const names = Object.keys(streamers).filter((n) => n.toLowerCase().includes(query.toLowerCase())).sort((a, b) => a.localeCompare(b, "th"));
-
-  const startNew = () => { setDraft({ name: "", normalPrice: 1000, discountPrice: "", photo: "" }); setEditing("new"); };
-  const startEdit = (n) => { setDraft({ name: n, normalPrice: streamers[n].normalPrice ?? 1000, discountPrice: streamers[n].discountPrice ?? "", photo: (photos && photos[n]) || "" }); setEditing(n); };
-  const cancel = () => { setEditing(null); setDraft(null); };
-
-  const save = () => {
-    const next = { ...streamers };
-    if (editing !== "new" && editing !== draft.name) delete next[editing];
-    next[draft.name] = {
-      normalPrice: Number(draft.normalPrice) || 0,
-      discountPrice: draft.discountPrice === "" ? null : Number(draft.discountPrice),
-    };
-    updateStreamers(next);
-
-    const nextPhotos = { ...photos };
-    if (editing !== "new" && editing !== draft.name) delete nextPhotos[editing];
-    if (draft.photo && draft.photo.trim()) {
-      nextPhotos[draft.name] = draft.photo.trim();
-    } else {
-      delete nextPhotos[draft.name];
-    }
-    updatePhotos(nextPhotos);
-    cancel();
-  };
-
-  const remove = (n) => {
-    const next = { ...streamers };
-    delete next[n];
-    updateStreamers(next);
-    const nextPhotos = { ...photos };
-    delete nextPhotos[n];
-    updatePhotos(nextPhotos);
-  };
-
-  return (
-    <div className="admin-section">
-      <div className="admin-note">รูปโปรไฟล์ที่เพิ่ม/แก้ไขที่นี่จะถูกบันทึกแบบ "แชร์" — ผู้ใช้ทุกคนที่เปิดแอปนี้จะเห็นรูปเดียวกัน</div>
-      <div className="admin-toolbar">
-        <input className="search" placeholder="ค้นหา Streamer..." value={query} onChange={(e) => setQuery(e.target.value)} />
-        <button className="btn-primary" onClick={startNew}>+ เพิ่ม Streamer</button>
-      </div>
-
-      {editing && (
-        <div className="edit-form">
-          <div className="ef-row">
-            <label>ชื่อ Streamer</label>
-            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-          </div>
-          <div className="ef-row">
-            <label>ราคาปกติ (บาท)</label>
-            <input type="number" value={draft.normalPrice} onChange={(e) => setDraft({ ...draft, normalPrice: e.target.value })} />
-          </div>
-          <div className="ef-row">
-            <label>ราคาลด (บาท, เว้นว่างถ้าไม่มี)</label>
-            <input type="number" value={draft.discountPrice} onChange={(e) => setDraft({ ...draft, discountPrice: e.target.value })} />
-          </div>
-          <div className="ef-row">
-            <label>ลิงก์รูปภาพ (Google Drive share link หรือ URL)</label>
-            <input value={draft.photo} onChange={(e) => setDraft({ ...draft, photo: e.target.value })} placeholder="https://drive.google.com/file/d/.../view" />
-          </div>
-          {draft.photo && driveImageUrl(draft.photo) && (
-            <div className="ef-row">
-              <label>ตัวอย่าง</label>
-              <img src={driveImageUrl(draft.photo)} alt="preview" className="photo-preview" />
-            </div>
-          )}
-          <div className="ef-actions">
-            <button className="btn-primary" onClick={save} disabled={!draft.name}>บันทึก</button>
-            <button className="btn-ghost" onClick={cancel}>ยกเลิก</button>
-          </div>
-        </div>
-      )}
-
-      <div className="admin-table">
-        <div className="at-row at-head streamer-cols-photo">
-          <div></div><div>ชื่อ</div><div>ราคาปกติ</div><div>ราคาลด</div><div>ราคาใช้จริง</div><div></div>
-        </div>
-        {names.map((n) => {
-          const s = streamers[n];
-          const actual = s.discountPrice != null ? s.discountPrice : s.normalPrice;
-          return (
-            <div className="at-row streamer-cols-photo" key={n}>
-              <div><Avatar name={n} photos={photos} size={30} /></div>
-              <div>{n}</div>
-              <div>{fmtMoney(s.normalPrice ?? 0)}</div>
-              <div>{s.discountPrice != null ? fmtMoney(s.discountPrice) : "—"}</div>
-              <div className="accent-text">{fmtMoney(actual)}</div>
-              <div className="at-actions">
-                <button className="icon-btn" onClick={() => startEdit(n)}>แก้ไข</button>
-                <button className="icon-btn danger" onClick={() => remove(n)}>ลบ</button>
-              </div>
-            </div>
-          );
-        })}
-        {names.length === 0 && <div className="dp-empty">ไม่พบข้อมูล</div>}
-      </div>
-    </div>
-  );
-}
-
-function AdminAvailability({ availability, updateAvailability, streamers }) {
-  const [query, setQuery] = React.useState("");
-  const [editing, setEditing] = React.useState(null);
-  const [draft, setDraft] = React.useState(null);
-
-  const blank = () => ({
-    id: Date.now(),
-    streamer: "",
-    date: fmtDMY(new Date()),
-    time: "14.00 - 23.30",
-    status: "available",
-    note: "",
-  });
-
-  const startNew = () => { setDraft(blank()); setEditing("new"); };
-  const startEdit = (a) => { setDraft({ ...a }); setEditing(a.id); };
-  const cancel = () => { setEditing(null); setDraft(null); };
-
-  const save = () => {
-    if (editing === "new") {
-      updateAvailability([...availability, draft]);
-    } else {
-      updateAvailability(availability.map((a) => (a.id === editing ? draft : a)));
-    }
-    cancel();
-  };
-  const remove = (id) => updateAvailability(availability.filter((a) => a.id !== id));
-
-  const filtered = availability
-    .filter((a) => a.streamer.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => parseDMY(a.date) - parseDMY(b.date) || timeStart(a.time).localeCompare(timeStart(b.time)));
-
-  return (
-    <div className="admin-section">
-      <div className="admin-note">บันทึกวันและช่วงเวลาที่ Streamer แต่ละคน "สะดวก" หรือ "ไม่สะดวก" รับงาน ระบบจะเตือนอัตโนมัติเมื่อจัดคิวไลฟ์ทับช่วงที่ไม่สะดวก</div>
-      <div className="admin-toolbar">
-        <input className="search" placeholder="ค้นหาชื่อ Streamer..." value={query} onChange={(e) => setQuery(e.target.value)} />
-        <button className="btn-primary" onClick={startNew}>+ เพิ่มช่วงเวลา</button>
-      </div>
-
-      {editing && (
-        <div className="edit-form">
-          <div className="ef-row">
-            <label>ชื่อ Streamer</label>
-            <input list="streamer-names-av" value={draft.streamer} onChange={(e) => setDraft({ ...draft, streamer: e.target.value })} />
-            <datalist id="streamer-names-av">
-              {Object.keys(streamers).map((n) => <option value={n} key={n} />)}
-            </datalist>
-          </div>
-          <div className="ef-row">
-            <label>วันที่ (DD/MM/YYYY)</label>
-            <input value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
-          </div>
-          <div className="ef-row">
-            <label>ช่วงเวลา (เช่น 14.00 - 18.00)</label>
-            <input value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} />
-          </div>
-          <div className="ef-row">
-            <label>สถานะ</label>
-            <select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}>
-              <option value="available">สะดวก</option>
-              <option value="unavailable">ไม่สะดวก</option>
-            </select>
-          </div>
-          <div className="ef-row" style={{ gridColumn: "1 / -1" }}>
-            <label>หมายเหตุ</label>
-            <input value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} placeholder="เช่น ติดเรียน, ทำงานประจำ, ว่างตลอด" />
-          </div>
-          <div className="ef-actions">
-            <button className="btn-primary" onClick={save} disabled={!draft.streamer}>บันทึก</button>
-            <button className="btn-ghost" onClick={cancel}>ยกเลิก</button>
-          </div>
-        </div>
-      )}
-
-      <div className="admin-table">
-        <div className="at-row at-head av-cols">
-          <div>Streamer</div><div>วันที่</div><div>ช่วงเวลา</div><div>สถานะ</div><div>หมายเหตุ</div><div></div>
-        </div>
-        {filtered.map((a) => (
-          <div className="at-row av-cols" key={a.id}>
-            <div>{a.streamer}</div>
-            <div>{a.date}</div>
-            <div>{a.time}</div>
-            <div>
-              <span className={"avail-badge " + a.status}>{a.status === "available" ? "สะดวก" : "ไม่สะดวก"}</span>
-            </div>
-            <div className="av-note">{a.note || "—"}</div>
-            <div className="at-actions">
-              <button className="icon-btn" onClick={() => startEdit(a)}>แก้ไข</button>
-              <button className="icon-btn danger" onClick={() => remove(a.id)}>ลบ</button>
-            </div>
-          </div>
-        ))}
-        {filtered.length === 0 && <div className="dp-empty">ยังไม่มีข้อมูลความสะดวก</div>}
-      </div>
-    </div>
-  );
-}
-
-function AdminPage({ streamers, updateStreamers, photos, updatePhotos, availability, updateAvailability }) {
-  const [sub, setSub] = React.useState("streamers");
-  return (
-    <div className="page">
-      <div className="page-title">หลังบ้าน (Admin)</div>
-      <div className="sub-tabs">
-        <button className={sub === "streamers" ? "sub-tab active" : "sub-tab"} onClick={() => setSub("streamers")}>List Streamer</button>
-        <button className={sub === "availability" ? "sub-tab active" : "sub-tab"} onClick={() => setSub("availability")}>ช่วงเวลาสะดวก</button>
-      </div>
-      {sub === "streamers" && <AdminStreamers streamers={streamers} updateStreamers={updateStreamers} photos={photos} updatePhotos={updatePhotos} />}
-      {sub === "availability" && <AdminAvailability availability={availability} updateAvailability={updateAvailability} streamers={streamers} />}
-    </div>
-  );
-}
-
-function SyncBar({ syncStatus, lastSynced, syncErrorMsg, syncNow }) {
-  const fmtTime = (iso) => {
-    if (!iso) return "ยังไม่เคยซิงค์";
-    const d = new Date(iso);
-    return d.toLocaleString("th-TH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  };
-  return (
-    <div className={"sync-bar " + syncStatus}>
-      <span className="sync-dot" />
-      <span className="sync-text">
-        {syncStatus === "syncing" && "กำลังซิงค์ข้อมูลจาก Google Sheet..."}
-        {syncStatus === "success" && `ซิงค์ล่าสุดจาก Google Sheet: ${fmtTime(lastSynced)} (อัปเดตอัตโนมัติทุก 30 วินาที)`}
-        {syncStatus === "error" && (
-          <>
-            {`ซิงค์ไม่สำเร็จ (ใช้ข้อมูลที่บันทึกไว้ล่าสุด: ${fmtTime(lastSynced)}) — `}
-            <b>{syncErrorMsg || "ไม่ทราบสาเหตุ"}</b>
-            {` — ตรวจสอบว่าชีทแชร์เป็น "ทุกคนที่มีลิงก์ดูได้" แล้วลองใหม่`}
-          </>
-        )}
-        {syncStatus === "idle" && "รอซิงค์ข้อมูล..."}
-      </span>
-      <button className="sync-btn" onClick={syncNow} disabled={syncStatus === "syncing"}>ซิงค์ตอนนี้</button>
-    </div>
-  );
-}
-
-function App() {
-  const {
-    schedule, streamers, availability, photos, loaded,
-    updateStreamers, updateAvailability, updatePhotos, saveError,
-    syncStatus, lastSynced, syncErrorMsg, syncNow,
-  } = useStorage();
-  const [tab, setTab] = React.useState("dashboard");
-  const [year, setYear] = React.useState(2026);
-  const [month, setMonth] = React.useState(6);
-
-  if (!loaded) {
-    return (
-      <div className="app-shell">
-        <style>{APP_CSS}</style>
-        <div className="loading">กำลังโหลดข้อมูล...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="app-shell">
-      <style>{APP_CSS}</style>
-      <TopNav tab={tab} setTab={setTab} />
-      <SyncBar syncStatus={syncStatus} lastSynced={lastSynced} syncErrorMsg={syncErrorMsg} syncNow={syncNow} />
-      {saveError && <div className="save-warning">⚠ ไม่สามารถบันทึกข้อมูลอัตโนมัติได้ในขณะนี้ การแก้ไขอาจไม่ถูกบันทึกถาวร</div>}
-      <div className="content">
-        {tab === "dashboard" && (
-          <Dashboard schedule={schedule} streamers={streamers} year={year} month={month} setYear={setYear} setMonth={setMonth} />
-        )}
-        {tab === "streamers" && <StreamersPage schedule={schedule} streamers={streamers} availability={availability} photos={photos} year={year} month={month} />}
-        {tab === "summary" && <Summary schedule={schedule} streamers={streamers} year={year} month={month} />}
-        {tab === "admin" && (
-          <AdminPage streamers={streamers} updateStreamers={updateStreamers} photos={photos} updatePhotos={updatePhotos} availability={availability} updateAvailability={updateAvailability} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-
-
-const rootEl = document.getElementById('root');
-if (window.ReactDOM.createRoot) {
-  ReactDOM.createRoot(rootEl).render(<App />);
-} else {
-  ReactDOM.render(<App />, rootEl);
-}
-
-</script>
-</body>
-</html>
+})();
