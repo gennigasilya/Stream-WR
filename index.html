@@ -4058,13 +4058,21 @@ const SEED_DATA = {
                      {
                          "id":  "e323",
                          "date":  "2026-07-28",
+                         "time":  "20.00 - 22.00",
+                         "gameId":  "cabal",
+                         "streamerId":  "s19",
+                         "program":  "Cabal: Infinite Combo  |  Sapphire Journey : [KOLs name]"
+                     },
+                     {
+                         "id":  "e324",
+                         "date":  "2026-07-28",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
                          "streamerId":  "s27",
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e324",
+                         "id":  "e325",
                          "date":  "2026-07-29",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -4072,7 +4080,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e325",
+                         "id":  "e326",
                          "date":  "2026-07-30",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -4080,7 +4088,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e326",
+                         "id":  "e327",
                          "date":  "2026-07-31",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -4156,7 +4164,67 @@ const Util = (() => {
 // Data layer: localStorage-backed store, seeded from data/seed.json on first run.
 const DB = (() => {
   const STORAGE_KEY = "streamer_manager_db_v1";
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1WmWYWnrkjyxzAbUoGU9sv7FYonnWlWwswtBufposvXQ/export?format=csv&gid=0";
   let state = null;
+
+  function splitCSVLine(line) {
+    const result = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (line[i + 1] === '"') { cur += '"'; i++; } else inQuotes = false;
+        } else cur += c;
+      } else if (c === '"') {
+        inQuotes = true;
+      } else if (c === ",") {
+        result.push(cur);
+        cur = "";
+      } else {
+        cur += c;
+      }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  function mapSheetGameId(raw) {
+    const t = (raw || "").trim();
+    if (/^TOSM$/.test(t)) return "tosm";
+    if (/^Zone4/.test(t)) return "zone4";
+    if (/^Cabal/.test(t)) return "cabal";
+    if (/^TR$/.test(t)) return "tr";
+    if (/^WARZ$/.test(t)) return "warz";
+    return null;
+  }
+
+  // Parses the sheet's raw CSV export into flat {date, time, gameId, streamerName, program} rows,
+  // forward-filling the merged Date column the same way the original PowerShell importer did.
+  function parseSheetCSV(csvText) {
+    const lines = csvText.split(/\r\n|\n/).slice(2); // row1 is blank, row2 is the header row
+    let currentDate = null;
+    const rows = [];
+    lines.forEach((line) => {
+      if (line === "") return;
+      const [dateRaw, time, game, program, kol] = splitCSVLine(line);
+      const dateTrim = (dateRaw || "").trim();
+      if (dateTrim) {
+        const parts = dateTrim.split("/");
+        if (parts.length === 3) {
+          currentDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+        }
+      }
+      if (!currentDate) return;
+      const streamerName = (kol || "").trim();
+      if (!streamerName) return;
+      const gameId = mapSheetGameId(game);
+      if (!gameId) return;
+      rows.push({ date: currentDate, time: (time || "").trim(), gameId, streamerName, program: (program || "").trim() });
+    });
+    return rows;
+  }
 
   function defaultState() {
     return { games: [], streamers: [], schedule: [], dayStatus: {} };
@@ -4336,26 +4404,21 @@ const DB = (() => {
     return load();
   }
 
-  // Refreshes the schedule (dates/times/games/who's live) from the bundled sheet import,
-  // without touching Streamer profiles the admin has already filled in (prices, photo, availability).
-  // New streamer names found in the sheet are added; existing streamers are matched by name and left as-is.
-  // Per-entry tournament (free) flags are carried over when the same date+time+game+streamer still exists.
-  async function syncScheduleFromSeed() {
-    let seed;
-    if (typeof SEED_DATA !== "undefined") {
-      seed = SEED_DATA;
-    } else {
-      const res = await fetch("data/seed.json");
-      seed = await res.json();
-    }
-
+  // Replaces the schedule with the given flat {date,time,gameId,streamerName,program} rows,
+  // matching streamers by name so existing profiles (prices, photo, availability) are left untouched.
+  // New streamer names are added; per-entry tournament (free) flags carry over when the same
+  // date+time+game+streamer combination still exists in the new rows.
+  function applyScheduleRows(rows) {
     const nameToId = {};
     state.streamers.forEach((s) => { nameToId[s.name] = s.id; });
     let addedStreamers = 0;
-    seed.streamers.forEach((seedS) => {
-      if (!nameToId[seedS.name]) {
-        const created = addStreamer(seedS.name);
-        nameToId[seedS.name] = created.id;
+    const seenNames = new Set();
+    rows.forEach((r) => {
+      if (seenNames.has(r.streamerName)) return;
+      seenNames.add(r.streamerName);
+      if (!nameToId[r.streamerName]) {
+        const created = addStreamer(r.streamerName);
+        nameToId[r.streamerName] = created.id;
         addedStreamers++;
       }
     });
@@ -4370,25 +4433,47 @@ const DB = (() => {
       oldTournamentKeys.add(`${e.date}|${e.time}|${e.gameId}|${name}`);
     });
 
-    const seedIdToName = {};
-    seed.streamers.forEach((s) => { seedIdToName[s.id] = s.name; });
-
-    const oldCount = state.schedule.length;
-    state.schedule = seed.schedule.map((se) => {
-      const name = seedIdToName[se.streamerId];
-      const key = `${se.date}|${se.time}|${se.gameId}|${name}`;
+    state.schedule = rows.map((r) => {
+      const key = `${r.date}|${r.time}|${r.gameId}|${r.streamerName}`;
       return {
         id: uid("e"),
-        date: se.date,
-        time: se.time,
-        gameId: se.gameId,
-        streamerId: nameToId[name],
-        program: se.program,
+        date: r.date,
+        time: r.time,
+        gameId: r.gameId,
+        streamerId: nameToId[r.streamerName],
+        program: r.program,
         isTournament: oldTournamentKeys.has(key),
       };
     });
     save();
-    return { addedStreamers, oldCount, newCount: state.schedule.length };
+    return { addedStreamers, newCount: state.schedule.length };
+  }
+
+  // Refreshes the schedule from the sheet snapshot embedded/bundled with this file (offline fallback).
+  async function syncScheduleFromSeed() {
+    let seed;
+    if (typeof SEED_DATA !== "undefined") {
+      seed = SEED_DATA;
+    } else {
+      const res = await fetch("data/seed.json");
+      seed = await res.json();
+    }
+    const seedIdToName = {};
+    seed.streamers.forEach((s) => { seedIdToName[s.id] = s.name; });
+    const rows = seed.schedule.map((se) => ({
+      date: se.date, time: se.time, gameId: se.gameId, streamerName: seedIdToName[se.streamerId], program: se.program,
+    }));
+    return applyScheduleRows(rows);
+  }
+
+  // Fetches the live Google Sheet CSV directly (real-time) and refreshes the schedule from it.
+  async function syncScheduleFromSheet() {
+    const res = await fetch(SHEET_CSV_URL);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    const rows = parseSheetCSV(text);
+    if (!rows.length) throw new Error("ไม่พบข้อมูลในชีท");
+    return applyScheduleRows(rows);
   }
 
   return {
@@ -4398,7 +4483,7 @@ const DB = (() => {
     setPrice, deletePrice, getPrice, effectivePrice,
     listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
     getDayStatus, setDayStatus, getEntryCost,
-    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed,
+    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet,
   };
 })();
 
@@ -4543,7 +4628,7 @@ const Calendar = (() => {
               <button data-view="month" class="${state.view === "month" ? "active" : ""}">รายเดือน</button>
               <button data-view="week" class="${state.view === "week" ? "active" : ""}">รายสัปดาห์</button>
             </div>
-            <button class="secondary small" id="reload-schedule" title="ดึงตารางไลฟ์ล่าสุดจากชีทที่ฝังไว้ในไฟล์นี้มาอัปเดต (ราคา/รูป/ช่วงเวลาที่สะดวกของ Streamer จะไม่หาย)">↻ โหลดตารางไลฟ์ล่าสุด</button>
+            <button class="secondary small" id="reload-schedule" title="ดึงตารางไลฟ์สดจาก Google Sheet ตอนนี้เลย (ต้องมีอินเทอร์เน็ต) — ราคา/รูป/ช่วงเวลาที่สะดวกของ Streamer จะไม่หาย">↻ โหลดตารางไลฟ์ล่าสุด</button>
           </div>
         </div>
         ${renderGameFilter()}
@@ -4577,10 +4662,21 @@ const Calendar = (() => {
       });
     });
     container.querySelector("#reload-schedule").addEventListener("click", async () => {
-      if (!confirm("ดึงตารางไลฟ์ล่าสุดจากชีทมาอัปเดต?\n\nจะอัปเดตวัน/เวลา/เกม/ผู้ไลฟ์ให้ตรงกับชีทล่าสุด ส่วนราคา รูปภาพ และช่วงเวลาที่สะดวกของ Streamer ที่ตั้งค่าไว้ในหลังบ้านจะไม่หาย")) return;
-      const result = await DB.syncScheduleFromSeed();
-      render(container);
-      Util.showToast(`อัปเดตตารางไลฟ์แล้ว (${result.newCount} คิว${result.addedStreamers ? `, เพิ่ม Streamer ใหม่ ${result.addedStreamers} คน` : ""})`);
+      if (!confirm("ดึงตารางไลฟ์ล่าสุดจาก Google Sheet สดๆ มาอัปเดต?\n\nจะอัปเดตวัน/เวลา/เกม/ผู้ไลฟ์ให้ตรงกับชีทล่าสุด ส่วนราคา รูปภาพ และช่วงเวลาที่สะดวกของ Streamer ที่ตั้งค่าไว้ในหลังบ้านจะไม่หาย")) return;
+      Util.showToast("กำลังดึงข้อมูลจาก Google Sheet…");
+      try {
+        const result = await DB.syncScheduleFromSheet();
+        render(container);
+        Util.showToast(`อัปเดตจากชีทสดแล้ว (${result.newCount} คิว${result.addedStreamers ? `, เพิ่ม Streamer ใหม่ ${result.addedStreamers} คน` : ""})`);
+      } catch (liveErr) {
+        try {
+          const result = await DB.syncScheduleFromSeed();
+          render(container);
+          Util.showToast(`ดึงชีทสดไม่ได้ (${liveErr.message}) — ใช้ข้อมูลสำรองในไฟล์แทน (${result.newCount} คิว)`);
+        } catch (fallbackErr) {
+          Util.showToast("โหลดข้อมูลไม่สำเร็จ: " + fallbackErr.message);
+        }
+      }
     });
   }
 
