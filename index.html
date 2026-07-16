@@ -321,6 +321,7 @@ details.game-summary .gs-totals { margin-left: auto; display: flex; gap: 16px; f
     <a href="#dashboard" data-route="dashboard">Dashboard</a>
     <a href="#summary" data-route="summary">สรุปรายเดือน</a>
     <a href="#admin" data-route="admin">หลังบ้าน (Admin)</a>
+    <a href="#" id="nav-logout" style="display:none;">ออกจากระบบ</a>
   </nav>
 </header>
 
@@ -4486,6 +4487,62 @@ const DB = (() => {
 })();
 
 
+// Client-side access gate for internal-only pages (Summary, Admin).
+// Note: this is a soft deterrent, not real security — the credentials live in this
+// public JS file, so anyone who reads the page source can see them.
+const Auth = (() => {
+  const KEY = "sm_auth_ok";
+  const VALID_ID = "Critdamage";
+  const VALID_PW = "CDM";
+
+  function isAuthed() {
+    return localStorage.getItem(KEY) === "1";
+  }
+
+  function logout() {
+    localStorage.removeItem(KEY);
+  }
+
+  function renderLogin(container, onSuccess) {
+    container.innerHTML = `
+      <div class="card" style="max-width:340px;margin:60px auto 0;">
+        <h2>เข้าสู่ระบบ</h2>
+        <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;">หน้านี้เป็นข้อมูลภายใน กรุณาเข้าสู่ระบบก่อนใช้งาน</p>
+        <div class="field" style="margin-bottom:10px;">
+          <label>ID</label>
+          <input id="auth-id" autocomplete="username" style="width:100%;">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Password</label>
+          <input id="auth-pw" type="password" autocomplete="current-password" style="width:100%;">
+        </div>
+        <div id="auth-error" style="color:var(--danger);font-size:12px;margin-bottom:10px;display:none;">ID หรือรหัสผ่านไม่ถูกต้อง</div>
+        <button id="auth-submit" style="width:100%;">เข้าสู่ระบบ</button>
+      </div>
+    `;
+    const idInput = container.querySelector("#auth-id");
+    const pwInput = container.querySelector("#auth-pw");
+    const errorEl = container.querySelector("#auth-error");
+
+    const submit = () => {
+      if (idInput.value.trim() === VALID_ID && pwInput.value === VALID_PW) {
+        localStorage.setItem(KEY, "1");
+        onSuccess();
+      } else {
+        errorEl.style.display = "block";
+      }
+    };
+    container.querySelector("#auth-submit").addEventListener("click", submit);
+    [idInput, pwInput].forEach((el) => el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submit();
+    }));
+    idInput.focus();
+  }
+
+  return { isAuthed, logout, renderLogin };
+})();
+
+
 const Calendar = (() => {
   let state = { year: null, month: null, view: "month", weekAnchor: null, gameFilter: null };
 
@@ -5380,10 +5437,13 @@ const Admin = (() => {
 
   const app = document.getElementById("app");
 
+  const logoutLink = document.getElementById("nav-logout");
+
   function setActiveNav(route) {
-    document.querySelectorAll("#nav-tabs a").forEach((a) => {
+    document.querySelectorAll("#nav-tabs a[data-route]").forEach((a) => {
       a.classList.toggle("active", a.getAttribute("data-route") === route);
     });
+    logoutLink.style.display = Auth.isAuthed() ? "" : "none";
   }
 
   function router() {
@@ -5396,10 +5456,12 @@ const Admin = (() => {
       Calendar.render(app);
     } else if (route === "summary") {
       setActiveNav("summary");
-      Summary.render(app);
+      if (Auth.isAuthed()) Summary.render(app);
+      else Auth.renderLogin(app, () => { setActiveNav("summary"); Summary.render(app); });
     } else if (route === "admin") {
       setActiveNav("admin");
-      Admin.render(app, parts.slice(1));
+      if (Auth.isAuthed()) Admin.render(app, parts.slice(1));
+      else Auth.renderLogin(app, () => { setActiveNav("admin"); Admin.render(app, parts.slice(1)); });
     } else if (route === "streamer" && parts[1]) {
       setActiveNav("");
       StreamerView.render(app, parts[1]);
@@ -5408,6 +5470,13 @@ const Admin = (() => {
       Calendar.render(app);
     }
   }
+
+  logoutLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    Auth.logout();
+    location.hash = "#dashboard";
+    router();
+  });
 
   window.addEventListener("hashchange", router);
   router();
