@@ -4875,6 +4875,17 @@ const StreamerView = (() => {
 
 const Summary = (() => {
   let state = { year: null, month: null };
+  const MANAGEMENT_FEE_RATE = 0.15;
+  const VAT_RATE = 0.07;
+
+  // Client invoice: cost paid to streamers, plus management fee margin, plus VAT on top of that.
+  function computeInvoice(actualTotal) {
+    const managementFee = actualTotal * MANAGEMENT_FEE_RATE;
+    const beforeVat = actualTotal + managementFee;
+    const vat = beforeVat * VAT_RATE;
+    const grandTotal = beforeVat + vat;
+    return { actualTotal, managementFee, beforeVat, vat, grandTotal };
+  }
 
   function init() {
     if (!state.year) {
@@ -4924,6 +4935,7 @@ const Summary = (() => {
   function render(container) {
     init();
     const summary = computeMonthSummary(state.year, state.month);
+    const invoice = computeInvoice(summary.actualTotal);
     const monthTitle = `${Util.MONTH_NAMES_TH[state.month - 1]} ${state.year + 543}`;
 
     const gameSections = Object.values(summary.byGame)
@@ -4976,6 +4988,19 @@ const Summary = (() => {
       </div>
 
       <div class="card">
+        <h2>ยอดเรียกเก็บลูกค้า</h2>
+        <table>
+          <tbody>
+            <tr><td>ต้นทุนที่จ่ายจริง (Streamer)</td><td style="text-align:right;">฿${Util.fmtMoney(invoice.actualTotal)}</td></tr>
+            <tr><td>Management Fee (${(MANAGEMENT_FEE_RATE * 100).toFixed(0)}%)</td><td style="text-align:right;">฿${Util.fmtMoney(invoice.managementFee)}</td></tr>
+            <tr><td><strong>รวมก่อน VAT</strong></td><td style="text-align:right;"><strong>฿${Util.fmtMoney(invoice.beforeVat)}</strong></td></tr>
+            <tr><td>VAT (${(VAT_RATE * 100).toFixed(0)}%)</td><td style="text-align:right;">฿${Util.fmtMoney(invoice.vat)}</td></tr>
+            <tr><td style="font-size:15px;"><strong>ยอดเรียกเก็บลูกค้าทั้งหมด</strong></td><td style="text-align:right;font-size:15px;color:var(--success);"><strong>฿${Util.fmtMoney(invoice.grandTotal)}</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
         <h2>สรุปแยกตามเกม</h2>
         ${gameSections || `<div class="empty-state">ไม่มีข้อมูลคิวไลฟ์ในเดือนนี้</div>`}
       </div>
@@ -4997,7 +5022,7 @@ const Summary = (() => {
 
 
 const Admin = (() => {
-  let state = { tab: "streamers", editingStreamerId: null };
+  let state = { tab: "streamers", editingStreamerId: null, streamerSearch: "", streamerGameFilter: "", streamerTimeFilter: "" };
 
   function render(container, subroute) {
     if (subroute && subroute[0] === "streamers" && subroute[1]) {
@@ -5032,17 +5057,41 @@ const Admin = (() => {
 
   // ---------------- Streamers ----------------
   function renderStreamers(body) {
-    const streamers = DB.listStreamers().slice().sort((a, b) => a.name.localeCompare(b.name));
+    const allStreamers = DB.listStreamers().slice().sort((a, b) => a.name.localeCompare(b.name));
+    const games = DB.listGames();
+    const searchLower = state.streamerSearch.trim().toLowerCase();
+    const streamers = allStreamers.filter((s) => {
+      if (searchLower && !s.name.toLowerCase().includes(searchLower)) return false;
+      if (state.streamerGameFilter && !s.prices.some((p) => p.gameId === state.streamerGameFilter)) return false;
+      if (state.streamerTimeFilter) {
+        const avail = s.availability || { timeSlots: [] };
+        if (!avail.timeSlots.includes(state.streamerTimeFilter)) return false;
+      }
+      return true;
+    });
+    const filtersActive = searchLower || state.streamerGameFilter || state.streamerTimeFilter;
     body.innerHTML = `
       <div class="card">
         <div class="row between">
-          <h2>Streamers (${streamers.length})</h2>
+          <h2>Streamers (${streamers.length}${filtersActive ? ` / ${allStreamers.length}` : ""})</h2>
           <button id="add-streamer">+ เพิ่ม Streamer</button>
+        </div>
+        <div class="row" style="gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <input type="text" id="streamer-search" placeholder="ค้นหาชื่อ Streamer..." value="${Util.escapeHtml(state.streamerSearch)}" style="flex:1;min-width:180px;">
+          <select id="streamer-game-filter">
+            <option value="">ทุกเกม</option>
+            ${games.map((g) => `<option value="${g.id}" ${state.streamerGameFilter === g.id ? "selected" : ""}>${Util.escapeHtml(g.name)}</option>`).join("")}
+          </select>
+          <select id="streamer-time-filter">
+            <option value="">ทุกช่วงเวลา</option>
+            ${Util.TIME_SLOTS.map((t) => `<option value="${t.key}" ${state.streamerTimeFilter === t.key ? "selected" : ""}>${t.label}</option>`).join("")}
+          </select>
         </div>
         <div style="overflow-x:auto;">
         <table>
           <thead><tr><th></th><th>ชื่อ</th><th>เกม &amp; ราคา</th><th>ช่วงเวลาที่สะดวก</th><th>วันที่สะดวก</th><th></th></tr></thead>
           <tbody>
+            ${streamers.length === 0 ? `<tr><td colspan="6"><div class="empty-state">ไม่พบ Streamer ที่ตรงกับตัวกรอง</div></td></tr>` : ""}
             ${streamers.map((s) => {
               const row = `<tr>
                 <td>${Util.avatarHTML(s, "tiny")}</td>
@@ -5066,6 +5115,21 @@ const Admin = (() => {
       </div>
     `;
 
+    body.querySelector("#streamer-search").addEventListener("input", (e) => {
+      state.streamerSearch = e.target.value;
+      const cursorPos = e.target.selectionStart;
+      renderBody(body.closest("main"));
+      const newInput = body.querySelector("#streamer-search");
+      if (newInput) { newInput.focus(); newInput.setSelectionRange(cursorPos, cursorPos); }
+    });
+    body.querySelector("#streamer-game-filter").addEventListener("change", (e) => {
+      state.streamerGameFilter = e.target.value;
+      renderBody(body.closest("main"));
+    });
+    body.querySelector("#streamer-time-filter").addEventListener("change", (e) => {
+      state.streamerTimeFilter = e.target.value;
+      renderBody(body.closest("main"));
+    });
     body.querySelector("#add-streamer").addEventListener("click", () => {
       const name = prompt("ชื่อ Streamer:");
       if (!name || !name.trim()) return;
