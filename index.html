@@ -6391,6 +6391,25 @@ const Admin = (() => {
     `;
   }
 
+  // Saves whatever is currently sitting in the name/price/availability fields, so that any
+  // action which re-renders the editor (photo change, add/remove a price row, etc.) never
+  // silently discards edits the admin hasn't clicked "บันทึก" for yet.
+  function commitDraft(editor) {
+    const name = editor.querySelector("#streamer-name").value.trim();
+    const timeSlots = Array.from(editor.querySelectorAll("[data-slot].active")).map((el) => el.getAttribute("data-slot"));
+    const days = Array.from(editor.querySelectorAll("[data-day].active")).map((el) => el.getAttribute("data-day"));
+    const patch = { availability: { timeSlots, days } };
+    if (name) patch.name = name;
+    DB.updateStreamer(state.editingStreamerId, patch);
+    editor.querySelectorAll(".price-normal").forEach((inp) => {
+      const gameId = inp.getAttribute("data-game");
+      const normal = Number(inp.value) || 0;
+      const discInp = editor.querySelector(`.price-discount[data-game="${gameId}"]`);
+      const disc = discInp.value === "" ? null : Number(discInp.value);
+      DB.setPrice(state.editingStreamerId, gameId, normal, disc);
+    });
+  }
+
   function attachStreamerEditorEvents(body) {
     const editor = body.querySelector("#streamer-editor");
     if (!editor) return;
@@ -6405,6 +6424,7 @@ const Admin = (() => {
       if (file.size > 1500000) { alert("ไฟล์รูปใหญ่เกินไป กรุณาใช้ไฟล์ไม่เกิน ~1.5MB"); return; }
       const reader = new FileReader();
       reader.onload = () => {
+        commitDraft(editor);
         DB.updateStreamer(state.editingStreamerId, { photo: reader.result });
         renderBody(body.closest("main"));
         Util.showToast("อัปเดตรูปภาพแล้ว");
@@ -6415,12 +6435,14 @@ const Admin = (() => {
     if (photoUrl) photoUrl.addEventListener("change", () => {
       const val = photoUrl.value.trim();
       if (!val) return;
+      commitDraft(editor);
       DB.updateStreamer(state.editingStreamerId, { photo: val });
       renderBody(body.closest("main"));
       Util.showToast("อัปเดตรูปภาพแล้ว");
     });
     const removePhoto = editor.querySelector("#remove-photo");
     if (removePhoto) removePhoto.addEventListener("click", () => {
+      commitDraft(editor);
       DB.updateStreamer(state.editingStreamerId, { photo: null });
       renderBody(body.closest("main"));
       Util.showToast("ลบรูปแล้ว");
@@ -6430,29 +6452,19 @@ const Admin = (() => {
     }));
     const addBtn = editor.querySelector("#add-price-row");
     if (addBtn) addBtn.addEventListener("click", () => {
+      commitDraft(editor);
       const gameId = editor.querySelector("#new-price-game").value;
       DB.setPrice(state.editingStreamerId, gameId, 0, null);
       renderBody(body.closest("main"));
     });
     editor.querySelectorAll("[data-del-price]").forEach((b) => b.addEventListener("click", () => {
+      commitDraft(editor);
       DB.deletePrice(state.editingStreamerId, b.getAttribute("data-del-price"));
       renderBody(body.closest("main"));
       Util.showToast("ลบราคาแล้ว");
     }));
     editor.querySelector("#save-streamer").addEventListener("click", () => {
-      const name = editor.querySelector("#streamer-name").value.trim();
-      const timeSlots = Array.from(editor.querySelectorAll("[data-slot].active")).map((el) => el.getAttribute("data-slot"));
-      const days = Array.from(editor.querySelectorAll("[data-day].active")).map((el) => el.getAttribute("data-day"));
-      const patch = { availability: { timeSlots, days } };
-      if (name) patch.name = name;
-      DB.updateStreamer(state.editingStreamerId, patch);
-      editor.querySelectorAll(".price-normal").forEach((inp) => {
-        const gameId = inp.getAttribute("data-game");
-        const normal = Number(inp.value) || 0;
-        const discInp = editor.querySelector(`.price-discount[data-game="${gameId}"]`);
-        const disc = discInp.value === "" ? null : Number(discInp.value);
-        DB.setPrice(state.editingStreamerId, gameId, normal, disc);
-      });
+      commitDraft(editor);
       Util.showToast("บันทึกแล้ว — Dashboard และหน้าสรุปอัปเดตอัตโนมัติ");
       renderBody(body.closest("main"));
     });
