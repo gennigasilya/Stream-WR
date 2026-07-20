@@ -144,6 +144,19 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .game-filter-chip[data-game-filter=""] { color: var(--text-dim); border-color: var(--border); }
 .game-filter-chip[data-game-filter=""].active { background: var(--accent); border-color: var(--accent); color: white; }
 
+.live-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.live-tile { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 2px rgba(139, 94, 60, 0.05); }
+.live-tile-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-left: 4px solid var(--accent); font-size: 14px; }
+.live-open-link { margin-left: auto; font-size: 12px; color: var(--text-dim); text-decoration: none; }
+.live-open-link:hover { color: var(--accent); }
+.live-embed-wrap { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
+.live-embed-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+.live-embed-wrap.live-placeholder { background: linear-gradient(160deg, var(--panel-2), var(--panel)); }
+.live-placeholder-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 16px; }
+.live-placeholder-icon { font-size: 32px; opacity: 0.6; }
+.live-placeholder-title { font-weight: 700; color: var(--text); font-size: 14px; }
+.live-placeholder-next { color: var(--text-dim); font-size: 12px; }
+
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-dow { text-align: center; font-size: 11px; color: var(--text-dim); padding-bottom: 4px; font-weight: 600; }
 .cal-cell {
@@ -321,6 +334,7 @@ details.game-summary .gs-totals { margin-left: auto; display: flex; gap: 16px; f
   <h1>🎥 Streamer Manager</h1>
   <nav class="tabs" id="nav-tabs">
     <a href="#dashboard" data-route="dashboard">Dashboard</a>
+    <a href="#live" data-route="live">📡 ไลฟ์สด</a>
     <a href="#summary" data-route="summary">สรุปรายเดือน</a>
     <a href="#admin" data-route="admin">หลังบ้าน (Admin)</a>
     <a href="#" id="nav-logout" style="display:none;">ออกจากระบบ</a>
@@ -340,31 +354,41 @@ const SEED_DATA = {
                       "id":  "tosm",
                       "name":  "TOSM",
                       "fullName":  "Tree of Savior M",
-                      "color":  "#8b5cf6"
+                      "color":  "#8b5cf6",
+                      "youtubeUrl":  "https://www.youtube.com/@TOSMExtreme/streams",
+                      "channelId":  "UC_29y-RkL_02-1AW4z8juTA"
                   },
                   {
                       "id":  "zone4",
                       "name":  "Zone4",
                       "fullName":  "Zone4",
-                      "color":  "#f59e0b"
+                      "color":  "#f59e0b",
+                      "youtubeUrl":  "https://www.youtube.com/@ElectronicsExtreme/streams",
+                      "channelId":  "UCgPbj4WVkRhxBpS9DrPl8tw"
                   },
                   {
                       "id":  "cabal",
                       "name":  "Cabal",
                       "fullName":  "Cabal",
-                      "color":  "#10b981"
+                      "color":  "#10b981",
+                      "youtubeUrl":  "https://www.youtube.com/@ComboInterActive/streams",
+                      "channelId":  "UCpN921HQ4Qn1l_EF_YffZjg"
                   },
                   {
                       "id":  "tr",
                       "name":  "TalesRunner",
                       "fullName":  "Tales Runner",
-                      "color":  "#3b82f6"
+                      "color":  "#3b82f6",
+                      "youtubeUrl":  "https://www.youtube.com/@thehof.talesrunner/streams",
+                      "channelId":  "UCwFU6etOhUn_L-gEoPVH85Q"
                   },
                   {
                       "id":  "warz",
                       "name":  "WarZ",
                       "fullName":  "WarZ",
-                      "color":  "#ec4899"
+                      "color":  "#ec4899",
+                      "youtubeUrl":  "https://www.youtube.com/@thehof.warzth/streams",
+                      "channelId":  "UC4HiLYp5Ebk79NTqmaNaeNQ"
                   }
               ],
     "streamers":  [
@@ -2195,26 +2219,6 @@ const SEED_DATA = {
                       },
                       {
                           "id":  "s90",
-                          "name":  "Nyaruka Mirin Vtuber Ch",
-                          "photo":  null,
-                          "prices":  [
-                                         {
-                                             "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
-                                         }
-                                     ],
-                          "availability":  {
-                                               "timeSlots":  [
-
-                                                             ],
-                                               "days":  [
-
-                                                        ]
-                                           }
-                      },
-                      {
-                          "id":  "s91",
                           "name":  "plagoldfish",
                           "photo":  null,
                           "prices":  [
@@ -2234,7 +2238,7 @@ const SEED_DATA = {
                                            }
                       },
                       {
-                          "id":  "s92",
+                          "id":  "s91",
                           "name":  "รีเซ็ตเองครับคุณ \u003c3",
                           "photo":  null,
                           "prices":  [
@@ -4748,7 +4752,7 @@ const SEED_DATA = {
                          "date":  "2026-07-26",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
-                         "streamerId":  "s90",
+                         "streamerId":  "s83",
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
@@ -4756,7 +4760,7 @@ const SEED_DATA = {
                          "date":  "2026-07-26",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
-                         "streamerId":  "s91",
+                         "streamerId":  "s90",
                          "program":  ""
                      },
                      {
@@ -4780,7 +4784,7 @@ const SEED_DATA = {
                          "date":  "2026-07-26",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
-                         "streamerId":  "s92",
+                         "streamerId":  "s91",
                          "program":  ""
                      },
                      {
@@ -4862,286 +4866,6 @@ const SEED_DATA = {
                          "gameId":  "zone4",
                          "streamerId":  "s45",
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
-                     },
-                     {
-                         "id":  "e327",
-                         "date":  "2026-08-01",
-                         "time":  "16.30 - 18.30",
-                         "gameId":  "warz",
-                         "streamerId":  "s1",
-                         "program":  "WarZ TH: Limited Edition"
-                     },
-                     {
-                         "id":  "e328",
-                         "date":  "2026-08-01",
-                         "time":  "18.30 - 20.30",
-                         "gameId":  "tosm",
-                         "streamerId":  "s2",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
-                     },
-                     {
-                         "id":  "e329",
-                         "date":  "2026-08-01",
-                         "time":  "19.00 - 21.00",
-                         "gameId":  "tr",
-                         "streamerId":  "s3",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e330",
-                         "date":  "2026-08-01",
-                         "time":  "19.00 - 21.00",
-                         "gameId":  "warz",
-                         "streamerId":  "s4",
-                         "program":  "WarZ TH: Limited Edition"
-                     },
-                     {
-                         "id":  "e331",
-                         "date":  "2026-08-01",
-                         "time":  "16.00 - 18.00",
-                         "gameId":  "cabal",
-                         "streamerId":  "s5",
-                         "program":  "CABAL Ultimate Combo | Emerald Odyssey : [KOLs name]"
-                     },
-                     {
-                         "id":  "e332",
-                         "date":  "2026-08-01",
-                         "time":  "21.00 - 23.00",
-                         "gameId":  "tosm",
-                         "streamerId":  "s6",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
-                     },
-                     {
-                         "id":  "e333",
-                         "date":  "2026-08-01",
-                         "time":  "21.00 - 23.00",
-                         "gameId":  "zone4",
-                         "streamerId":  "s7",
-                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
-                     },
-                     {
-                         "id":  "e334",
-                         "date":  "2026-08-01",
-                         "time":  "21.30 - 23.30",
-                         "gameId":  "tr",
-                         "streamerId":  "s8",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e335",
-                         "date":  "2026-08-01",
-                         "time":  "21.30 - 23.30",
-                         "gameId":  "warz",
-                         "streamerId":  "s9",
-                         "program":  "WarZ TH: Limited Edition"
-                     },
-                     {
-                         "id":  "e336",
-                         "date":  "2026-08-01",
-                         "time":  "23.30 - 01.30",
-                         "gameId":  "tosm",
-                         "streamerId":  "s10",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
-                     },
-                     {
-                         "id":  "e337",
-                         "date":  "2026-08-02",
-                         "time":  "14.00 - 16.00",
-                         "gameId":  "tr",
-                         "streamerId":  "s11",
-                         "program":  "Tales Runner | Run With Dreamers"
-                     },
-                     {
-                         "id":  "e338",
-                         "date":  "2026-08-02",
-                         "time":  "14.00 - 16.00",
-                         "gameId":  "warz",
-                         "streamerId":  "s12",
-                         "program":  "WarZ TH: Limited Edition"
-                     },
-                     {
-                         "id":  "e339",
-                         "date":  "2026-08-02",
-                         "time":  "16.30 - 18.30",
-                         "gameId":  "tr",
-                         "streamerId":  "s13",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e340",
-                         "date":  "2026-08-02",
-                         "time":  "16.30 - 18.30",
-                         "gameId":  "warz",
-                         "streamerId":  "s14",
-                         "program":  ""
-                     },
-                     {
-                         "id":  "e341",
-                         "date":  "2026-08-02",
-                         "time":  "18.30 - 20.30",
-                         "gameId":  "tosm",
-                         "streamerId":  "s15",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
-                     },
-                     {
-                         "id":  "e342",
-                         "date":  "2026-08-02",
-                         "time":  "19.00 - 21.00",
-                         "gameId":  "tr",
-                         "streamerId":  "s16",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e343",
-                         "date":  "2026-08-02",
-                         "time":  "19.00 - 21.00",
-                         "gameId":  "warz",
-                         "streamerId":  "s1",
-                         "program":  ""
-                     },
-                     {
-                         "id":  "e344",
-                         "date":  "2026-08-02",
-                         "time":  "16.00 - 18.00",
-                         "gameId":  "cabal",
-                         "streamerId":  "s17",
-                         "program":  "Cabal: Infinite Combo  |  Sapphire Journey : [KOLs name]"
-                     },
-                     {
-                         "id":  "e345",
-                         "date":  "2026-08-02",
-                         "time":  "21.00 - 23.00",
-                         "gameId":  "tosm",
-                         "streamerId":  "s18",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
-                     },
-                     {
-                         "id":  "e346",
-                         "date":  "2026-08-02",
-                         "time":  "21.00 - 23.00",
-                         "gameId":  "zone4",
-                         "streamerId":  "s19",
-                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
-                     },
-                     {
-                         "id":  "e347",
-                         "date":  "2026-08-02",
-                         "time":  "21.30 - 23.30",
-                         "gameId":  "tr",
-                         "streamerId":  "s20",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e348",
-                         "date":  "2026-08-02",
-                         "time":  "21.30 - 23.30",
-                         "gameId":  "warz",
-                         "streamerId":  "s21",
-                         "program":  ""
-                     },
-                     {
-                         "id":  "e349",
-                         "date":  "2026-08-02",
-                         "time":  "23.30 - 01.30",
-                         "gameId":  "tosm",
-                         "streamerId":  "s22",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
-                     },
-                     {
-                         "id":  "e350",
-                         "date":  "2026-08-03",
-                         "time":  "14.00 - 16.00",
-                         "gameId":  "tr",
-                         "streamerId":  "s23",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e351",
-                         "date":  "2026-08-03",
-                         "time":  "14.00 - 16.00",
-                         "gameId":  "warz",
-                         "streamerId":  "s12",
-                         "program":  ""
-                     },
-                     {
-                         "id":  "e352",
-                         "date":  "2026-08-03",
-                         "time":  "16.30 - 18.30",
-                         "gameId":  "tr",
-                         "streamerId":  "s24",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e353",
-                         "date":  "2026-08-03",
-                         "time":  "16.30 - 18.30",
-                         "gameId":  "warz",
-                         "streamerId":  "s14",
-                         "program":  ""
-                     },
-                     {
-                         "id":  "e354",
-                         "date":  "2026-08-03",
-                         "time":  "19.00 - 21.00",
-                         "gameId":  "tr",
-                         "streamerId":  "s25",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e355",
-                         "date":  "2026-08-03",
-                         "time":  "19.00 - 21.00",
-                         "gameId":  "warz",
-                         "streamerId":  "s26",
-                         "program":  ""
-                     },
-                     {
-                         "id":  "e356",
-                         "date":  "2026-08-03",
-                         "time":  "20.00 - 22.00",
-                         "gameId":  "cabal",
-                         "streamerId":  "s27",
-                         "program":  "CABAL Ultimate Combo | Emerald Odyssey : [KOLs name]"
-                     },
-                     {
-                         "id":  "e357",
-                         "date":  "2026-08-03",
-                         "time":  "21.00 - 23.00",
-                         "gameId":  "tosm",
-                         "streamerId":  "s28",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
-                     },
-                     {
-                         "id":  "e358",
-                         "date":  "2026-08-03",
-                         "time":  "21.00 - 23.00",
-                         "gameId":  "zone4",
-                         "streamerId":  "s29",
-                         "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
-                     },
-                     {
-                         "id":  "e359",
-                         "date":  "2026-08-03",
-                         "time":  "21.30 - 23.30",
-                         "gameId":  "tr",
-                         "streamerId":  "s30",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e360",
-                         "date":  "2026-08-03",
-                         "time":  "21.30 - 23.30",
-                         "gameId":  "warz",
-                         "streamerId":  "s31",
-                         "program":  ""
-                     },
-                     {
-                         "id":  "e361",
-                         "date":  "2026-08-03",
-                         "time":  "23.30 - 01.30",
-                         "gameId":  "tosm",
-                         "streamerId":  "s32",
-                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      }
                  ],
     "dayStatus":  {
@@ -5225,6 +4949,10 @@ const DB = (() => {
   const SHEET_MONTH_TABS = [
     { name: "กรกฎาคม 2569", gid: 0 },
     { name: "สิงหาคม 2569", gid: 2081502206 },
+    { name: "กันยายน 2569", gid: 1965405291 },
+    { name: "ตุลาคม 2569", gid: 929378145 },
+    { name: "พฤศจิกายน 2569", gid: 1192033499 },
+    { name: "ธันวาคม 2569", gid: 1508262743 },
   ];
   function sheetCsvUrl(gid) {
     return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
@@ -5325,7 +5053,7 @@ const DB = (() => {
     return state.games.find((g) => g.id === id);
   }
   function addGame(g) {
-    const game = { id: uid("g"), name: g.name, fullName: g.fullName || g.name, color: g.color || "#64748b" };
+    const game = { id: uid("g"), name: g.name, fullName: g.fullName || g.name, color: g.color || "#64748b", youtubeUrl: g.youtubeUrl || null, channelId: g.channelId || null };
     state.games.push(game);
     save();
     return game;
@@ -5532,16 +5260,27 @@ const DB = (() => {
 
   // Fetches every known month tab's CSV directly from Google Sheets (real-time) and refreshes
   // the schedule from the combined result. See SHEET_MONTH_TABS above to add new months.
+  // A single tab failing (network error, or a tab whose sharing/protection settings block
+  // anonymous export) doesn't abort the rest — its rows are just skipped and reported back.
   async function syncScheduleFromSheet() {
+    const failedTabs = [];
     const results = await Promise.all(SHEET_MONTH_TABS.map(async (tab) => {
-      const res = await fetch(sheetCsvUrl(tab.gid));
-      if (!res.ok) throw new Error(`${tab.name}: HTTP ${res.status}`);
-      const text = await res.text();
-      return parseSheetCSV(text);
+      try {
+        const res = await fetch(sheetCsvUrl(tab.gid));
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const rows = parseSheetCSV(text);
+        if (!rows.length) failedTabs.push(tab.name);
+        return rows;
+      } catch (err) {
+        failedTabs.push(tab.name);
+        return [];
+      }
     }));
     const rows = results.flat();
-    if (!rows.length) throw new Error("ไม่พบข้อมูลในชีท");
-    return applyScheduleRows(rows);
+    if (!rows.length) throw new Error("ไม่พบข้อมูลในชีทเลย (ทุกแท็บดึงไม่ได้)");
+    const applied = applyScheduleRows(rows);
+    return { ...applied, failedTabs };
   }
 
   return {
@@ -5791,7 +5530,8 @@ const Calendar = (() => {
       try {
         const result = await DB.syncScheduleFromSheet();
         render(container);
-        Util.showToast(`อัปเดตจากชีทสดแล้ว (${result.newCount} คิว${result.addedStreamers ? `, เพิ่ม Streamer ใหม่ ${result.addedStreamers} คน` : ""})`);
+        const failedNote = result.failedTabs && result.failedTabs.length ? ` — ดึงไม่ได้: ${result.failedTabs.join(", ")}` : "";
+        Util.showToast(`อัปเดตจากชีทสดแล้ว (${result.newCount} คิว${result.addedStreamers ? `, เพิ่ม Streamer ใหม่ ${result.addedStreamers} คน` : ""})${failedNote}`);
       } catch (liveErr) {
         try {
           const result = await DB.syncScheduleFromSeed();
@@ -5904,6 +5644,119 @@ const Calendar = (() => {
         refreshBackground();
         openDayModal(dateISO);
       });
+    });
+  }
+
+  return { render };
+})();
+
+
+// Real-time "who's live right now" board — embeds each game's official YouTube channel
+// live player directly (no API key needed) during its scheduled window. Outside a scheduled
+// window we skip the embed and show our own "not live yet / next up" card instead of
+// YouTube's raw "video unavailable" error, using the schedule data we already have.
+const LiveStream = (() => {
+  function frameUrl(channelId) {
+    return `https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=0&_=${Date.now()}`;
+  }
+
+  function nowMinutesBangkok() {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false,
+    }).formatToParts(new Date());
+    const h = Number(parts.find((p) => p.type === "hour").value);
+    const m = Number(parts.find((p) => p.type === "minute").value);
+    return h * 60 + m;
+  }
+
+  function parseTimeRange(rangeStr) {
+    const parts = (rangeStr || "").split("-").map((s) => s.trim());
+    if (parts.length !== 2) return null;
+    const toMin = (t) => {
+      const m = t.match(/^(\d{1,2})\.(\d{2})$/);
+      if (!m) return null;
+      return Number(m[1]) * 60 + Number(m[2]);
+    };
+    const start = toMin(parts[0]);
+    const end = toMin(parts[1]);
+    if (start === null || end === null) return null;
+    return { start, end };
+  }
+
+  function isRangeActive(range, nowMin) {
+    if (range.end >= range.start) return nowMin >= range.start && nowMin < range.end;
+    return nowMin >= range.start || nowMin < range.end; // wraps past midnight
+  }
+
+  // For a game: finds the entry currently in its scheduled window today (if any),
+  // and the next upcoming one today (for the "not live yet" card).
+  function gameScheduleStatus(gameId) {
+    const nowMin = nowMinutesBangkok();
+    const todayEntries = DB.listScheduleByDate(Util.todayISO())
+      .filter((e) => e.gameId === gameId)
+      .sort((a, b) => a.time.localeCompare(b.time));
+
+    let current = null;
+    let next = null;
+    todayEntries.forEach((e) => {
+      const range = parseTimeRange(e.time);
+      if (!range) return;
+      if (!current && isRangeActive(range, nowMin)) current = e;
+      if (!next && range.start > nowMin) next = e;
+    });
+    return { current, next };
+  }
+
+  function renderTileBody(g) {
+    const status = gameScheduleStatus(g.id);
+    if (status.current) {
+      return `<div class="live-embed-wrap">
+        <iframe id="live-frame-${g.id}" src="${frameUrl(g.channelId)}" allow="autoplay; encrypted-media" allowfullscreen loading="lazy" frameborder="0"></iframe>
+      </div>`;
+    }
+    const s = status.next ? DB.getStreamer(status.next.streamerId) : null;
+    return `<div class="live-embed-wrap live-placeholder">
+      <div class="live-placeholder-inner">
+        <div class="live-placeholder-icon">⏳</div>
+        <div class="live-placeholder-title">ยังไม่ถึงเวลาไลฟ์</div>
+        ${status.next
+          ? `<div class="live-placeholder-next">รอบถัดไปวันนี้ ${Util.escapeHtml(status.next.time)}${s ? ` — ${Util.escapeHtml(s.name)}` : ""}</div>`
+          : `<div class="live-placeholder-next">ไม่มีคิวไลฟ์วันนี้แล้ว</div>`}
+      </div>
+    </div>`;
+  }
+
+  function render(container) {
+    const allGames = DB.listGames();
+    const withChannel = allGames.filter((g) => g.channelId);
+    const missing = allGames.filter((g) => !g.channelId);
+
+    container.innerHTML = `
+      <div class="card">
+        <div class="row between">
+          <h2>📡 ไลฟ์สดตอนนี้ — ทุกเกม</h2>
+          <button class="secondary small" id="live-refresh-all">🔄 รีเฟรชทั้งหมด</button>
+        </div>
+        <p style="color:var(--text-dim);font-size:12px;">ช่วงที่มีคิวไลฟ์ตามตารางจะขึ้นภาพสดให้อัตโนมัติ ช่วงที่ไม่มีคิวจะโชว์รอบถัดไปแทน</p>
+      </div>
+      ${withChannel.length ? `<div class="live-grid">
+        ${withChannel.map((g) => `
+          <div class="live-tile">
+            <div class="live-tile-header" style="border-left-color:${g.color};">
+              <span class="color-dot" style="background:${g.color}"></span>
+              <strong>${Util.escapeHtml(g.fullName)}</strong>
+              ${g.youtubeUrl ? `<a href="${Util.escapeHtml(g.youtubeUrl)}" target="_blank" rel="noopener" class="live-open-link">เปิดใน YouTube ↗</a>` : ""}
+            </div>
+            ${renderTileBody(g)}
+          </div>
+        `).join("")}
+      </div>` : `<div class="card empty-state">ยังไม่ได้ตั้ง Channel ID ให้เกมไหนเลย — ไปตั้งได้ที่หลังบ้าน &gt; เกม</div>`}
+      ${missing.length ? `<div class="card"><p style="color:var(--text-dim);font-size:12px;">ยังไม่ได้ตั้ง Channel ID: ${missing.map((g) => Util.escapeHtml(g.name)).join(", ")} — ไปตั้งได้ที่หลังบ้าน &gt; เกม</p></div>` : ""}
+    `;
+
+    container.querySelector("#live-refresh-all").addEventListener("click", () => {
+      render(container);
+      Util.showToast("รีเฟรชแล้ว");
     });
   }
 
@@ -6476,17 +6329,22 @@ const Admin = (() => {
     body.innerHTML = `
       <div class="card">
         <div class="row between"><h2>เกม (${games.length})</h2><button id="add-game">+ เพิ่มเกม</button></div>
+        <div style="overflow-x:auto;">
+        <p style="color:var(--text-dim);font-size:12px;margin-top:-4px;">Channel ID ใช้สำหรับหน้า "ไลฟ์สด" (แสดงภาพสดจริง) — ถ้าไม่รู้ Channel ID ส่งลิงก์ช่อง YouTube มาให้ทีมพัฒนาหาให้ได้</p>
         <table>
-          <thead><tr><th>สี</th><th>ชื่อย่อ</th><th>ชื่อเต็ม</th><th></th></tr></thead>
+          <thead><tr><th>สี</th><th>ชื่อย่อ</th><th>ชื่อเต็ม</th><th>ช่องไลฟ์ (YouTube)</th><th>Channel ID</th><th></th></tr></thead>
           <tbody>
             ${games.map((g) => `<tr data-row="${g.id}">
               <td><input type="color" class="g-color" data-id="${g.id}" value="${g.color}" style="width:40px;padding:2px;"></td>
               <td><input class="g-name" data-id="${g.id}" value="${Util.escapeHtml(g.name)}" style="width:140px;"></td>
               <td><input class="g-fullname" data-id="${g.id}" value="${Util.escapeHtml(g.fullName)}" style="width:200px;"></td>
+              <td><input class="g-youtube" data-id="${g.id}" value="${g.youtubeUrl ? Util.escapeHtml(g.youtubeUrl) : ""}" placeholder="https://www.youtube.com/@channel/streams" style="width:260px;"></td>
+              <td><input class="g-channelid" data-id="${g.id}" value="${g.channelId ? Util.escapeHtml(g.channelId) : ""}" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" style="width:220px;"></td>
               <td><button class="secondary small" data-save="${g.id}">บันทึก</button></td>
             </tr>`).join("")}
           </tbody>
         </table>
+        </div>
       </div>
     `;
     body.querySelector("#add-game").addEventListener("click", () => {
@@ -6499,10 +6357,14 @@ const Admin = (() => {
     body.querySelectorAll("[data-save]").forEach((btn) => btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-save");
       const row = body.querySelector(`tr[data-row="${id}"]`);
+      const youtubeUrl = row.querySelector(".g-youtube").value.trim();
+      const channelId = row.querySelector(".g-channelid").value.trim();
       DB.updateGame(id, {
         color: row.querySelector(".g-color").value,
         name: row.querySelector(".g-name").value.trim(),
         fullName: row.querySelector(".g-fullname").value.trim(),
+        youtubeUrl: youtubeUrl || null,
+        channelId: channelId || null,
       });
       Util.showToast("บันทึกแล้ว — Dashboard และหน้าสรุปอัปเดตอัตโนมัติ");
       renderBody(body.closest("main"));
@@ -6535,6 +6397,9 @@ const Admin = (() => {
     if (route === "dashboard") {
       setActiveNav("dashboard");
       Calendar.render(app);
+    } else if (route === "live") {
+      setActiveNav("live");
+      LiveStream.render(app);
     } else if (route === "summary") {
       setActiveNav("summary");
       if (Auth.isAuthed()) Summary.render(app);
