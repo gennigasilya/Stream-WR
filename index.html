@@ -7473,6 +7473,32 @@ const DB = (() => {
     return { updated };
   }
 
+  // Same staleness problem as syncGamesFromSeed, but for streamer photos bulk-imported into
+  // the bundled seed after a device's localStorage was already created. Only fills in a photo
+  // for a streamer who currently has none — never overwrites a photo someone already set
+  // (bundled default or a custom upload), and matches by name like the other sheet syncs.
+  async function syncPhotosFromSeed() {
+    let seed;
+    if (typeof SEED_DATA !== "undefined") {
+      seed = SEED_DATA;
+    } else {
+      const res = await fetch("data/seed.json");
+      seed = await res.json();
+    }
+    const byName = {};
+    seed.streamers.forEach((s) => { byName[s.name] = s; });
+    let updated = 0;
+    state.streamers.forEach((s) => {
+      const seedS = byName[s.name];
+      if (seedS && seedS.photo && !s.photo) {
+        s.photo = seedS.photo;
+        updated++;
+      }
+    });
+    save();
+    return { updated };
+  }
+
   // Replaces the schedule with the given flat {date,time,gameId,streamerName,program} rows,
   // matching streamers by name so existing profiles (prices, photo, availability) are left untouched.
   // New streamer names are added; per-entry tournament (free) flags carry over when the same
@@ -7567,7 +7593,7 @@ const DB = (() => {
     setPrice, deletePrice, getPrice, effectivePrice,
     listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
     getDayStatus, setDayStatus, getEntryCost,
-    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncStreamersFromSheet, syncGamesFromSeed,
+    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncStreamersFromSheet, syncGamesFromSeed, syncPhotosFromSeed,
   };
 })();
 
@@ -8427,6 +8453,7 @@ const Admin = (() => {
           <h2>Streamers (${streamers.length}${filtersActive ? ` / ${allStreamers.length}` : ""})</h2>
           <div class="row" style="gap:8px;">
             <button class="secondary small" id="sync-streamers-sheet">↻ ซิงค์ราคา/เวลาว่าง จากชีท</button>
+            <button class="secondary small" id="sync-photos-seed" title="เติมรูปเริ่มต้นให้ Streamer ที่ยังไม่มีรูป (ไม่ทับรูปที่ตั้งไว้แล้ว)">↻ ซิงค์รูปเริ่มต้น</button>
             <button id="add-streamer">+ เพิ่ม Streamer</button>
           </div>
         </div>
@@ -8495,6 +8522,20 @@ const Admin = (() => {
       } catch (err) {
         syncBtn.disabled = false;
         syncBtn.textContent = "↻ ซิงค์ราคา/เวลาว่าง จากชีท";
+        alert("ซิงค์ไม่สำเร็จ: " + err.message);
+      }
+    });
+    const syncPhotosBtn = body.querySelector("#sync-photos-seed");
+    syncPhotosBtn.addEventListener("click", async () => {
+      syncPhotosBtn.disabled = true;
+      syncPhotosBtn.textContent = "กำลังซิงค์...";
+      try {
+        const result = await DB.syncPhotosFromSeed();
+        renderBody(body.closest("main"));
+        Util.showToast(`ซิงค์รูปแล้ว — เติมรูปให้ ${result.updated} คน`);
+      } catch (err) {
+        syncPhotosBtn.disabled = false;
+        syncPhotosBtn.textContent = "↻ ซิงค์รูปเริ่มต้น";
         alert("ซิงค์ไม่สำเร็จ: " + err.message);
       }
     });
