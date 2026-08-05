@@ -449,7 +449,7 @@ const SEED_DATA = {
                       "youtubeUrl":  "https://www.youtube.com/@thehof.talesrunner/streams",
                       "channelId":  "UCwFU6etOhUn_L-gEoPVH85Q",
                       "brief":  {
-                                    "text":  "Timeline : ถึงวันที่ 13 สิงหาคม\n\nLink : https://talesrunner.gg/preorderJab-july-2026-th \nโปรโมทคือ ข่าวพรีออเดอร์น้องจ๊าบ \nอยากให้สตรีมเมอช่วยกันโปรโมทค้าบ\nTimeline : ถึงวันที่ 13 สิงหาคม\n\nLink : https://www.facebook.com/share/p/1BtJpD4mYU/\nพรีออเดอร์เสื้อ CuteBoy ได้เเล้ววันนี้",
+                                    "text":  "Timeline : ถึงวันที่ 13 สิงหาคม\n\nLink : https://talesrunner.gg/preorderJab-july-2026-th \nโปรโมทคือ ข่าวพรีออเดอร์น้องจ๊าบ \nอยากให้สตรีมเมอช่วยกันโปรโมทค้าบ\n\nLink : https://www.facebook.com/share/p/1BtJpD4mYU/\nพรีออเดอร์เสื้อ CuteBoy ได้เเล้ววันนี้",
                                     "startDate":  null,
                                     "endDate":  null
                                 }
@@ -9135,11 +9135,28 @@ const Util = (() => {
     const d = parts.find((p) => p.type === "day").value;
     return `${y}-${m}-${d}`;
   }
+  // A photo failing to load once doesn't mean it's broken — flaky mobile connections (weak
+  // signal, iOS Low Power Mode throttling background loads) can cause a transient failure that
+  // would succeed a second later. Retry a couple of times (cache-busted, with backoff) before
+  // giving up and falling back to initials.
+  function handleAvatarImgError(img, initials) {
+    const retries = Number(img.dataset.retries || "0");
+    if (retries < 2) {
+      img.dataset.retries = String(retries + 1);
+      if (!img.dataset.baseSrc) img.dataset.baseSrc = img.src;
+      const baseSrc = img.dataset.baseSrc;
+      setTimeout(() => {
+        img.src = baseSrc + (baseSrc.includes("?") ? "&" : "?") + "r=" + Date.now();
+      }, 700 * (retries + 1));
+    } else if (img.parentElement) {
+      img.parentElement.textContent = initials;
+    }
+  }
   function avatarHTML(streamer, sizeClass) {
     const cls = "avatar-circle" + (sizeClass ? " " + sizeClass : "");
     const initials = streamer ? streamer.name.slice(0, 2).toUpperCase() : "?";
     if (streamer && streamer.photo) {
-      return `<div class="${cls}"><img src="${streamer.photo}" alt="${escapeHtml(streamer.name)}" onerror="this.parentElement.textContent='${escapeHtml(initials)}';"></div>`;
+      return `<div class="${cls}"><img src="${streamer.photo}" alt="${escapeHtml(streamer.name)}" onerror="Util.handleAvatarImgError(this, '${escapeHtml(initials)}')"></div>`;
     }
     return `<div class="${cls}">${escapeHtml(initials)}</div>`;
   }
@@ -9158,7 +9175,7 @@ const Util = (() => {
   function closeModal() {
     document.getElementById("modal-root").innerHTML = "";
   }
-  return { fmtMoney, pad2, toISODate, parseISODate, MONTH_NAMES_TH, DOW_TH, TIME_SLOTS, AVAIL_DAYS, EVERY_DAY_LABEL, escapeHtml, linkify, todayISO, avatarHTML, showToast, openModal, closeModal };
+  return { fmtMoney, pad2, toISODate, parseISODate, MONTH_NAMES_TH, DOW_TH, TIME_SLOTS, AVAIL_DAYS, EVERY_DAY_LABEL, escapeHtml, linkify, todayISO, avatarHTML, handleAvatarImgError, showToast, openModal, closeModal };
 })();
 
 
@@ -9936,10 +9953,19 @@ const Calendar = (() => {
     startOfWeek.setDate(anchor.getDate() - anchor.getDay());
     const todayISO = Util.todayISO();
 
-    let cols = "";
+    const weekDates = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(startOfWeek);
       d.setDate(startOfWeek.getDate() + i);
+      weekDates.push(d);
+    }
+    // If today falls in this week, lead with it (then continue forward, wrapping the earlier
+    // days of the week to the end) so it's visible immediately without scrolling on mobile.
+    const todayIdx = weekDates.findIndex((d) => Util.toISODate(d.getFullYear(), d.getMonth() + 1, d.getDate()) === todayISO);
+    const orderedDates = todayIdx >= 0 ? [...weekDates.slice(todayIdx), ...weekDates.slice(0, todayIdx)] : weekDates;
+
+    let cols = "";
+    orderedDates.forEach((d) => {
       const dateISO = Util.toISODate(d.getFullYear(), d.getMonth() + 1, d.getDate());
       const status = DB.getDayStatus(dateISO);
       const entries = dayEntriesSorted(dateISO);
@@ -9965,7 +9991,7 @@ const Calendar = (() => {
         </div>
         ${events}
       </div>`;
-    }
+    });
     return `<div class="week-grid">${cols}</div>`;
   }
 
@@ -10322,7 +10348,16 @@ const LiveStream = (() => {
       DB.syncBriefsFromSheet().then(() => {
         const afterSnapshot = JSON.stringify(DB.listGames().map((g) => g.brief));
         if (afterSnapshot !== beforeSnapshot) render(container, { skipAutoSync: true });
-      }).catch(() => {});
+      }).catch(() => {
+        // Some in-app browsers (e.g. the Google app's built-in browser) block background
+        // fetches to other Google services like Sheets, even though Safari/Chrome don't — a
+        // silent toast would leave visitors staring at possibly-stale data with no clue why.
+        const warn = document.createElement("div");
+        warn.className = "card";
+        warn.style.border = "2px solid var(--warning)";
+        warn.innerHTML = `<p style="color:var(--warning);font-size:13px;margin:0;">⚠️ โหลดข้อมูลล่าสุดจากชีทไม่ได้ อาจเป็นเพราะเปิดผ่านเบราว์เซอร์ในแอป (เช่น แอป Google) — ลองเปิดผ่าน Safari หรือ Chrome โดยตรงแทน</p>`;
+        container.prepend(warn);
+      });
     }
   }
 
@@ -10452,13 +10487,8 @@ const SetupQueue = (() => {
               const pendingRecs = recs.filter((r) => !r.done);
               return `<tr>
                 <td style="white-space:nowrap;">${Util.escapeHtml(name)}</td>
-                <td style="font-size:12px;white-space:nowrap;">
-                  ${doneGameNames.length ? doneGameNames.map((g) => {
-                    const r = doneRecByGame[g];
-                    const setupISO = parseSetupDate(r.dateRaw);
-                    const setupLabel = setupISO ? formatThaiDate(setupISO) : Util.escapeHtml(r.dateRaw || "?");
-                    return `<div style="margin-bottom:4px;"><span class="badge" style="background:${gameBadgeColor(g)};">${Util.escapeHtml(g)}</span> Set ${setupLabel}${r.time ? " " + Util.escapeHtml(r.time) : ""}</div>`;
-                  }).join("") : `<span style="color:var(--text-dim);">ไม่มี</span>`}
+                <td style="font-size:12px;">
+                  ${doneGameNames.length ? doneGameNames.map((g) => `<span class="badge" style="background:${gameBadgeColor(g)};margin-right:4px;margin-bottom:4px;display:inline-block;">${Util.escapeHtml(g)}</span>`).join("") : `<span style="color:var(--text-dim);">ไม่มี</span>`}
                 </td>
                 <td>${pendingRecs.length ? pendingRecs.map((r) => renderSetupVsLiveLine(r.game, r)).join("") : `<span style="color:var(--text-dim);font-size:12px;">—</span>`}</td>
               </tr>`;
@@ -10498,7 +10528,17 @@ const SetupQueue = (() => {
       DB.syncSetupFromSheet().then(() => {
         const after = JSON.stringify(DB.listSetupRecords());
         if (after !== before) render(container, { skipAutoSync: true });
-      }).catch(() => {});
+      }).catch(() => {
+        // Some in-app browsers (e.g. the Google app's built-in browser) block background
+        // fetches to other Google services like Sheets, even though Safari/Chrome don't — this
+        // page is specifically a "don't forget" reminder, so silently going stale is the worst
+        // failure mode; show a visible hint instead.
+        const warn = document.createElement("div");
+        warn.className = "card";
+        warn.style.border = "2px solid var(--warning)";
+        warn.innerHTML = `<p style="color:var(--warning);font-size:13px;margin:0;">⚠️ โหลดข้อมูลล่าสุดจากชีทไม่ได้ อาจเป็นเพราะเปิดผ่านเบราว์เซอร์ในแอป (เช่น แอป Google) — ลองเปิดผ่าน Safari หรือ Chrome โดยตรงแทน</p>`;
+        container.prepend(warn);
+      });
     }
   }
 
