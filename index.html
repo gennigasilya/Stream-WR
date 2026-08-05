@@ -179,6 +179,15 @@ h3 { font-size: 14px; margin: 0 0 8px; }
   70% { box-shadow: 0 0 0 7px rgba(192,57,43,0); }
   100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
 }
+.live-card-game-name {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.02em;
+}
 .live-game-badge {
   position: absolute; bottom: -2px; right: -2px;
   width: 26px; height: 26px; border-radius: 50%;
@@ -10201,25 +10210,46 @@ const LiveStream = (() => {
     return { start, end };
   }
 
-  function isRangeActive(range, nowMin) {
-    if (range.end >= range.start) return nowMin >= range.start && nowMin < range.end;
-    return nowMin >= range.start || nowMin < range.end; // wraps past midnight
+  // A range dated "today" that wraps past midnight (e.g. 23.30-01.30) hasn't started yet
+  // during today's own early-morning hours — that early stretch belongs to YESTERDAY's
+  // wrapping entry instead (still running from last night into this morning). So this needs
+  // to know which day the entry is dated relative to today, not just compare against nowMin
+  // in isolation — otherwise a not-yet-started tonight's entry gets mistaken for the tail end
+  // of an entry that doesn't exist (or was actually a different streamer, last night's).
+  function isRangeActive(range, nowMin, isYesterday) {
+    const wraps = range.end < range.start;
+    if (!wraps) return !isYesterday && nowMin >= range.start && nowMin < range.end;
+    return isYesterday ? nowMin < range.end : nowMin >= range.start;
   }
 
-  // For a game: finds the entry currently in its scheduled window today (if any),
-  // and the next upcoming one today (for the "not live yet" caption).
+  function addDaysISO(iso, delta) {
+    const d = Util.parseISODate(iso);
+    d.setDate(d.getDate() + delta);
+    return Util.toISODate(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  }
+
+  // For a game: finds the entry currently in its scheduled window (checking both today's
+  // entries and yesterday's, since an overnight slot dated yesterday can still be running
+  // into today's early morning), and the next upcoming one today (for the "not live yet" caption).
   function gameScheduleStatus(gameId) {
     const nowMin = nowMinutesBangkok();
-    const todayEntries = DB.listScheduleByDate(Util.todayISO())
+    const today = Util.todayISO();
+    const yesterdayEntries = DB.listScheduleByDate(addDaysISO(today, -1)).filter((e) => e.gameId === gameId);
+    const todayEntries = DB.listScheduleByDate(today)
       .filter((e) => e.gameId === gameId)
       .sort((a, b) => a.time.localeCompare(b.time));
 
     let current = null;
+    yesterdayEntries.forEach((e) => {
+      const range = parseTimeRange(e.time);
+      if (!range) return;
+      if (!current && isRangeActive(range, nowMin, true)) current = e;
+    });
     let next = null;
     todayEntries.forEach((e) => {
       const range = parseTimeRange(e.time);
       if (!range) return;
-      if (!current && isRangeActive(range, nowMin)) current = e;
+      if (!current && isRangeActive(range, nowMin, false)) current = e;
       if (!next && range.start > nowMin) next = e;
     });
     return { current, next };
@@ -10249,6 +10279,7 @@ const LiveStream = (() => {
     const closeTag = g.youtubeUrl ? "</a>" : "</div>";
 
     return `${tag}
+      <span class="live-card-game-name" style="background:${g.color};">${Util.escapeHtml(g.name)}</span>
       <div class="live-card-avatar-wrap">
         ${avatarHtml}
         ${isLive ? `<span class="live-pulse-dot"></span>` : ""}
