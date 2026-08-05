@@ -144,18 +144,52 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .game-filter-chip[data-game-filter=""] { color: var(--text-dim); border-color: var(--border); }
 .game-filter-chip[data-game-filter=""].active { background: var(--accent); border-color: var(--accent); color: white; }
 
-.live-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-.live-tile { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 2px rgba(139, 94, 60, 0.05); }
-.live-tile-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-left: 4px solid var(--accent); font-size: 14px; }
-.live-open-link { margin-left: auto; font-size: 12px; color: var(--text-dim); text-decoration: none; }
-.live-open-link:hover { color: var(--accent); }
-.live-embed-wrap { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
-.live-embed-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-.live-embed-wrap.live-placeholder { background: linear-gradient(160deg, var(--panel-2), var(--panel)); }
-.live-placeholder-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 16px; }
-.live-placeholder-icon { font-size: 32px; opacity: 0.6; }
-.live-placeholder-title { font-weight: 700; color: var(--text); font-size: 14px; }
-.live-placeholder-next { color: var(--text-dim); font-size: 12px; }
+.live-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+.live-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.live-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(139, 94, 60, 0.14); }
+.live-card.is-offline { opacity: 0.6; }
+.live-card-avatar-wrap { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+.live-card-avatar-wrap .avatar-circle { width: 100%; height: 100%; font-size: 26px; border: 3px solid var(--border); }
+.live-card.is-live .live-card-avatar-wrap .avatar-circle { border-color: var(--danger); }
+.live-pulse-dot {
+  position: absolute; top: 2px; right: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--danger); border: 2px solid var(--panel);
+  animation: live-pulse 1.6s infinite;
+}
+.live-dot-inline {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--danger); animation: live-pulse 1.6s infinite;
+}
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(192,57,43,0.5); }
+  70% { box-shadow: 0 0 0 7px rgba(192,57,43,0); }
+  100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
+}
+.live-game-badge {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 800; color: white;
+  border: 2px solid var(--panel);
+}
+.live-card-name { font-weight: 700; font-size: 14px; text-align: center; color: var(--text); }
+.live-card-status { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+.live-card-status.is-live { color: var(--danger); }
+.live-card-status.is-offline { color: var(--text-dim); font-weight: 400; text-align: center; }
 
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-dow { text-align: center; font-size: 11px; color: var(--text-dim); padding-bottom: 4px; font-weight: 600; }
@@ -399,16 +433,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -419,16 +460,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -439,13 +486,13 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1600,
+                                             "discountPrice":  1600
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
 
@@ -459,16 +506,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -485,10 +540,16 @@ const SEED_DATA = {
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -499,16 +560,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
+                                             "normalPrice":  1000,
                                              "discountPrice":  null
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -519,16 +586,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "zone4",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  700
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -539,16 +612,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  2000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -559,16 +639,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -579,16 +666,16 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon"
                                                         ]
                                            }
                       },
@@ -599,16 +686,18 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  1200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "thu"
                                                         ]
                                            }
                       },
@@ -619,16 +708,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -639,8 +736,8 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  750
                                          },
                                          {
                                              "gameId":  "warz",
@@ -650,7 +747,9 @@ const SEED_DATA = {
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
 
@@ -664,16 +763,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -684,16 +789,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -704,16 +816,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -730,10 +850,16 @@ const SEED_DATA = {
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -744,16 +870,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -769,16 +902,22 @@ const SEED_DATA = {
                                          },
                                          {
                                              "gameId":  "cabal",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1200,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -789,8 +928,8 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2500,
+                                             "discountPrice":  2500
                                          }
                                      ],
                           "availability":  {
@@ -798,7 +937,7 @@ const SEED_DATA = {
 
                                                              ],
                                                "days":  [
-
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -809,16 +948,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -829,16 +975,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -849,16 +1002,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -869,16 +1029,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1200,
+                                             "discountPrice":  1200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -889,16 +1057,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -909,16 +1083,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -934,21 +1114,29 @@ const SEED_DATA = {
                                          },
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1200,
+                                             "discountPrice":  400
                                          },
                                          {
                                              "gameId":  "zone4",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1200,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -959,8 +1147,8 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  300
                                          },
                                          {
                                              "gameId":  "cabal",
@@ -975,10 +1163,17 @@ const SEED_DATA = {
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -989,16 +1184,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "zone4",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  2000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1009,16 +1210,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1600,
+                                             "discountPrice":  1600
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1029,16 +1236,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1049,16 +1264,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1069,16 +1291,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1089,16 +1318,18 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "sat"
                                                         ]
                                            }
                       },
@@ -1109,21 +1340,29 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          },
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1134,16 +1373,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1800
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1154,16 +1399,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  1500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1180,10 +1433,16 @@ const SEED_DATA = {
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1194,8 +1453,8 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          },
                                          {
                                              "gameId":  "cabal",
@@ -1205,10 +1464,16 @@ const SEED_DATA = {
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1219,16 +1484,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1300,
+                                             "discountPrice":  1300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1239,16 +1510,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  5000,
+                                             "discountPrice":  2000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1259,16 +1536,17 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "sat"
                                                         ]
                                            }
                       },
@@ -1279,16 +1557,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1299,16 +1583,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  700
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1319,16 +1609,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "zone4",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1700,
+                                             "discountPrice":  1200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1339,16 +1635,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1361,14 +1665,26 @@ const SEED_DATA = {
                                              "gameId":  "tosm",
                                              "normalPrice":  0,
                                              "discountPrice":  null
+                                         },
+                                         {
+                                             "gameId":  "warz",
+                                             "normalPrice":  1600,
+                                             "discountPrice":  1600
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1379,16 +1695,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1399,8 +1722,8 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  2000
                                          }
                                      ],
                           "availability":  {
@@ -1419,16 +1742,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  1500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1439,16 +1769,17 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "sat"
                                                         ]
                                            }
                       },
@@ -1464,16 +1795,23 @@ const SEED_DATA = {
                                          },
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1484,16 +1822,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1504,16 +1848,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1524,16 +1875,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1544,16 +1902,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1564,16 +1930,17 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "wed"
                                                         ]
                                            }
                       },
@@ -1584,16 +1951,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1610,7 +1983,7 @@ const SEED_DATA = {
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
 
@@ -1624,16 +1997,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1400,
+                                             "discountPrice":  1400
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1644,16 +2025,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1664,16 +2052,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1684,8 +2078,8 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
@@ -1704,16 +2098,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1724,13 +2124,13 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "zone4",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  600
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
 
@@ -1744,16 +2144,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1764,16 +2171,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tosm",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1784,16 +2198,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1200,
+                                             "discountPrice":  1200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1804,16 +2224,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  1500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1824,16 +2252,17 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "sat"
                                                         ]
                                            }
                       },
@@ -1844,16 +2273,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1864,8 +2300,8 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  20000,
+                                             "discountPrice":  20000
                                          }
                                      ],
                           "availability":  {
@@ -1884,16 +2320,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2500,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1904,16 +2346,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "zone4",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  2000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1924,16 +2372,16 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon"
                                                              ],
                                                "days":  [
-
+                                                            "mon"
                                                         ]
                                            }
                       },
@@ -1944,16 +2392,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1964,16 +2420,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -1984,16 +2447,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2004,16 +2473,17 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  800,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "tue"
                                                         ]
                                            }
                       },
@@ -2026,14 +2496,27 @@ const SEED_DATA = {
                                              "gameId":  "zone4",
                                              "normalPrice":  0,
                                              "discountPrice":  null
+                                         },
+                                         {
+                                             "gameId":  "warz",
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2044,16 +2527,17 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "sat"
                                                         ]
                                            }
                       },
@@ -2064,13 +2548,13 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
+                                             "normalPrice":  5000,
                                              "discountPrice":  null
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
 
@@ -2084,16 +2568,17 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "wed"
                                                         ]
                                            }
                       },
@@ -2104,13 +2589,14 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
 
@@ -2124,16 +2610,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2144,16 +2636,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  1200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2164,16 +2662,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2193,7 +2698,13 @@ const SEED_DATA = {
 
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2204,16 +2715,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2244,16 +2762,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2264,16 +2788,23 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2284,16 +2815,24 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2324,16 +2863,16 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  200
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon"
                                                              ],
                                                "days":  [
-
+                                                            "mon"
                                                         ]
                                            }
                       },
@@ -2344,16 +2883,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2000,
+                                             "discountPrice":  2000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2364,16 +2909,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1500,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2384,16 +2935,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  500
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2404,16 +2961,22 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  2500,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
@@ -2424,53 +2987,41 @@ const SEED_DATA = {
                           "prices":  [
                                          {
                                              "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  300
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon",
+                                                                 "evening",
+                                                                 "night"
                                                              ],
                                                "days":  [
-
+                                                            "mon",
+                                                            "tue",
+                                                            "wed",
+                                                            "thu",
+                                                            "fri",
+                                                            "sat",
+                                                            "sun"
                                                         ]
                                            }
                       },
                       {
                           "id":  "s101",
-                          "name":  "บ้านนอกคอกนา + แก๊ง GM อัลตร้าสมูท",
-                          "photo":  null,
-                          "prices":  [
-                                         {
-                                             "gameId":  "warz",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
-                                         }
-                                     ],
-                          "availability":  {
-                                               "timeSlots":  [
-
-                                                             ],
-                                               "days":  [
-
-                                                        ]
-                                           }
-                      },
-                      {
-                          "id":  "s102",
                           "name":  "imnotjlene",
                           "photo":  null,
                           "prices":  [
                                          {
                                              "gameId":  "tr",
-                                             "normalPrice":  0,
-                                             "discountPrice":  null
+                                             "normalPrice":  1000,
+                                             "discountPrice":  1000
                                          }
                                      ],
                           "availability":  {
                                                "timeSlots":  [
-
+                                                                 "afternoon"
                                                              ],
                                                "days":  [
 
@@ -5212,7 +5763,7 @@ const SEED_DATA = {
                          "date":  "2026-07-28",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
-                         "streamerId":  "s28",
+                         "streamerId":  "s52",
                          "program":  "Cabal: Infinite Combo  |  Sapphire Journey : [KOLs name]"
                      },
                      {
@@ -5396,7 +5947,7 @@ const SEED_DATA = {
                          "date":  "2026-07-30",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
-                         "streamerId":  "s85",
+                         "streamerId":  "s87",
                          "program":  ""
                      },
                      {
@@ -5436,7 +5987,7 @@ const SEED_DATA = {
                          "date":  "2026-07-30",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
-                         "streamerId":  "s43",
+                         "streamerId":  "s1",
                          "program":  ""
                      },
                      {
@@ -5859,20 +6410,12 @@ const SEED_DATA = {
                          "id":  "e423",
                          "date":  "2026-08-04",
                          "time":  "14.00 - 16.00",
-                         "gameId":  "tr",
-                         "streamerId":  "s56",
-                         "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
-                     },
-                     {
-                         "id":  "e424",
-                         "date":  "2026-08-04",
-                         "time":  "14.00 - 16.00",
                          "gameId":  "warz",
                          "streamerId":  "s27",
                          "program":  ""
                      },
                      {
-                         "id":  "e425",
+                         "id":  "e424",
                          "date":  "2026-08-04",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -5880,7 +6423,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e426",
+                         "id":  "e425",
                          "date":  "2026-08-04",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -5888,7 +6431,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e427",
+                         "id":  "e426",
                          "date":  "2026-08-04",
                          "time":  "18.30 - 20.30",
                          "gameId":  "tosm",
@@ -5896,7 +6439,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e428",
+                         "id":  "e427",
                          "date":  "2026-08-04",
                          "time":  "19.00 - 21.00",
                          "gameId":  "tr",
@@ -5904,7 +6447,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e429",
+                         "id":  "e428",
                          "date":  "2026-08-04",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -5912,7 +6455,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e430",
+                         "id":  "e429",
                          "date":  "2026-08-04",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -5920,7 +6463,7 @@ const SEED_DATA = {
                          "program":  "CABAL Ultimate Combo | Emerald Odyssey : [KOLs name]"
                      },
                      {
-                         "id":  "e431",
+                         "id":  "e430",
                          "date":  "2026-08-04",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -5928,7 +6471,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e432",
+                         "id":  "e431",
                          "date":  "2026-08-04",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -5936,7 +6479,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e433",
+                         "id":  "e432",
                          "date":  "2026-08-04",
                          "time":  "21.30 - 23.30",
                          "gameId":  "tr",
@@ -5944,7 +6487,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e434",
+                         "id":  "e433",
                          "date":  "2026-08-04",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -5952,7 +6495,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e435",
+                         "id":  "e434",
                          "date":  "2026-08-04",
                          "time":  "23.30 - 01.30",
                          "gameId":  "tosm",
@@ -5960,7 +6503,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e436",
+                         "id":  "e435",
                          "date":  "2026-08-05",
                          "time":  "14.00 - 16.00",
                          "gameId":  "tr",
@@ -5968,7 +6511,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e437",
+                         "id":  "e436",
                          "date":  "2026-08-05",
                          "time":  "14.00 - 16.00",
                          "gameId":  "warz",
@@ -5976,7 +6519,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e438",
+                         "id":  "e437",
                          "date":  "2026-08-05",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -5984,7 +6527,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e439",
+                         "id":  "e438",
                          "date":  "2026-08-05",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -5992,7 +6535,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e440",
+                         "id":  "e439",
                          "date":  "2026-08-05",
                          "time":  "18.30 - 20.30",
                          "gameId":  "tosm",
@@ -6000,7 +6543,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e441",
+                         "id":  "e440",
                          "date":  "2026-08-05",
                          "time":  "19.00 - 21.00",
                          "gameId":  "tr",
@@ -6008,7 +6551,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e442",
+                         "id":  "e441",
                          "date":  "2026-08-05",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -6016,7 +6559,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e443",
+                         "id":  "e442",
                          "date":  "2026-08-05",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -6024,7 +6567,7 @@ const SEED_DATA = {
                          "program":  "Cabal: Infinite Combo  |  Sapphire Journey : [KOLs name]"
                      },
                      {
-                         "id":  "e444",
+                         "id":  "e443",
                          "date":  "2026-08-05",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -6032,15 +6575,15 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e445",
+                         "id":  "e444",
                          "date":  "2026-08-05",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
-                         "streamerId":  "s7",
+                         "streamerId":  "s45",
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e446",
+                         "id":  "e445",
                          "date":  "2026-08-05",
                          "time":  "21.30 - 23.30",
                          "gameId":  "tr",
@@ -6048,7 +6591,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e447",
+                         "id":  "e446",
                          "date":  "2026-08-05",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -6056,7 +6599,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e448",
+                         "id":  "e447",
                          "date":  "2026-08-05",
                          "time":  "23.30 - 01.30",
                          "gameId":  "tosm",
@@ -6064,7 +6607,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e449",
+                         "id":  "e448",
                          "date":  "2026-08-06",
                          "time":  "14.00 - 16.00",
                          "gameId":  "tr",
@@ -6072,7 +6615,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e450",
+                         "id":  "e449",
                          "date":  "2026-08-06",
                          "time":  "14.00 - 16.00",
                          "gameId":  "warz",
@@ -6080,7 +6623,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e451",
+                         "id":  "e450",
                          "date":  "2026-08-06",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -6088,7 +6631,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e452",
+                         "id":  "e451",
                          "date":  "2026-08-06",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -6096,7 +6639,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e453",
+                         "id":  "e452",
                          "date":  "2026-08-06",
                          "time":  "18.30 - 20.30",
                          "gameId":  "tosm",
@@ -6104,7 +6647,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e454",
+                         "id":  "e453",
                          "date":  "2026-08-06",
                          "time":  "19.00 - 21.00",
                          "gameId":  "tr",
@@ -6112,7 +6655,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e455",
+                         "id":  "e454",
                          "date":  "2026-08-06",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -6120,7 +6663,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e456",
+                         "id":  "e455",
                          "date":  "2026-08-06",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -6128,7 +6671,7 @@ const SEED_DATA = {
                          "program":  "CABAL Ultimate Combo | Emerald Odyssey : [KOLs name]"
                      },
                      {
-                         "id":  "e457",
+                         "id":  "e456",
                          "date":  "2026-08-06",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -6136,7 +6679,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e458",
+                         "id":  "e457",
                          "date":  "2026-08-06",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -6144,7 +6687,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e459",
+                         "id":  "e458",
                          "date":  "2026-08-06",
                          "time":  "21.30 - 23.30",
                          "gameId":  "tr",
@@ -6152,15 +6695,15 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e460",
+                         "id":  "e459",
                          "date":  "2026-08-06",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
-                         "streamerId":  "s101",
+                         "streamerId":  "s21",
                          "program":  ""
                      },
                      {
-                         "id":  "e461",
+                         "id":  "e460",
                          "date":  "2026-08-06",
                          "time":  "23.30 - 01.30",
                          "gameId":  "tosm",
@@ -6168,15 +6711,15 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e462",
+                         "id":  "e461",
                          "date":  "2026-08-07",
                          "time":  "14.00 - 16.00",
                          "gameId":  "tr",
-                         "streamerId":  "s102",
+                         "streamerId":  "s101",
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e463",
+                         "id":  "e462",
                          "date":  "2026-08-07",
                          "time":  "14.00 - 16.00",
                          "gameId":  "warz",
@@ -6184,7 +6727,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e464",
+                         "id":  "e463",
                          "date":  "2026-08-07",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -6192,7 +6735,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e465",
+                         "id":  "e464",
                          "date":  "2026-08-07",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -6200,7 +6743,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e466",
+                         "id":  "e465",
                          "date":  "2026-08-07",
                          "time":  "18.30 - 20.30",
                          "gameId":  "tosm",
@@ -6208,7 +6751,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e467",
+                         "id":  "e466",
                          "date":  "2026-08-07",
                          "time":  "19.00 - 21.00",
                          "gameId":  "tr",
@@ -6216,7 +6759,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e468",
+                         "id":  "e467",
                          "date":  "2026-08-07",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -6224,7 +6767,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e469",
+                         "id":  "e468",
                          "date":  "2026-08-07",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -6232,7 +6775,7 @@ const SEED_DATA = {
                          "program":  "Cabal: Infinite Combo  |  Sapphire Journey : [KOLs name]"
                      },
                      {
-                         "id":  "e470",
+                         "id":  "e469",
                          "date":  "2026-08-07",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -6240,7 +6783,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e471",
+                         "id":  "e470",
                          "date":  "2026-08-07",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -6248,7 +6791,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e472",
+                         "id":  "e471",
                          "date":  "2026-08-07",
                          "time":  "21.30 - 23.30",
                          "gameId":  "tr",
@@ -6256,7 +6799,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e473",
+                         "id":  "e472",
                          "date":  "2026-08-07",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -6264,7 +6807,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e474",
+                         "id":  "e473",
                          "date":  "2026-08-07",
                          "time":  "23.30 - 01.30",
                          "gameId":  "tosm",
@@ -6272,7 +6815,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e475",
+                         "id":  "e474",
                          "date":  "2026-08-08",
                          "time":  "14.00 - 16.00",
                          "gameId":  "tr",
@@ -6280,7 +6823,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e476",
+                         "id":  "e475",
                          "date":  "2026-08-08",
                          "time":  "14.00 - 16.00",
                          "gameId":  "warz",
@@ -6288,7 +6831,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e477",
+                         "id":  "e476",
                          "date":  "2026-08-08",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -6296,7 +6839,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e478",
+                         "id":  "e477",
                          "date":  "2026-08-08",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -6304,7 +6847,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e479",
+                         "id":  "e478",
                          "date":  "2026-08-08",
                          "time":  "18.30 - 20.30",
                          "gameId":  "tosm",
@@ -6312,7 +6855,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e480",
+                         "id":  "e479",
                          "date":  "2026-08-08",
                          "time":  "19.00 - 21.00",
                          "gameId":  "tr",
@@ -6320,7 +6863,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e481",
+                         "id":  "e480",
                          "date":  "2026-08-08",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -6328,7 +6871,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e482",
+                         "id":  "e481",
                          "date":  "2026-08-08",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -6336,7 +6879,7 @@ const SEED_DATA = {
                          "program":  "CABAL Ultimate Combo | Emerald Odyssey : [KOLs name]"
                      },
                      {
-                         "id":  "e483",
+                         "id":  "e482",
                          "date":  "2026-08-08",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -6344,7 +6887,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e484",
+                         "id":  "e483",
                          "date":  "2026-08-08",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -6352,7 +6895,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e485",
+                         "id":  "e484",
                          "date":  "2026-08-08",
                          "time":  "21.30 - 23.30",
                          "gameId":  "tr",
@@ -6360,7 +6903,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e486",
+                         "id":  "e485",
                          "date":  "2026-08-08",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -6368,7 +6911,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e487",
+                         "id":  "e486",
                          "date":  "2026-08-08",
                          "time":  "23.30 - 01.30",
                          "gameId":  "tosm",
@@ -6376,7 +6919,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e488",
+                         "id":  "e487",
                          "date":  "2026-08-09",
                          "time":  "14.00 - 16.00",
                          "gameId":  "tr",
@@ -6384,7 +6927,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e489",
+                         "id":  "e488",
                          "date":  "2026-08-09",
                          "time":  "14.00 - 16.00",
                          "gameId":  "warz",
@@ -6392,7 +6935,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e490",
+                         "id":  "e489",
                          "date":  "2026-08-09",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -6400,7 +6943,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e491",
+                         "id":  "e490",
                          "date":  "2026-08-09",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -6408,7 +6951,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e492",
+                         "id":  "e491",
                          "date":  "2026-08-09",
                          "time":  "18.30 - 20.30",
                          "gameId":  "tosm",
@@ -6416,7 +6959,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e493",
+                         "id":  "e492",
                          "date":  "2026-08-09",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -6424,7 +6967,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e494",
+                         "id":  "e493",
                          "date":  "2026-08-09",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -6432,7 +6975,7 @@ const SEED_DATA = {
                          "program":  "Cabal: Infinite Combo  |  Sapphire Journey : [KOLs name]"
                      },
                      {
-                         "id":  "e495",
+                         "id":  "e494",
                          "date":  "2026-08-09",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -6440,7 +6983,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e496",
+                         "id":  "e495",
                          "date":  "2026-08-09",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -6448,7 +6991,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e497",
+                         "id":  "e496",
                          "date":  "2026-08-09",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -6456,11 +6999,27 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e498",
+                         "id":  "e497",
                          "date":  "2026-08-09",
                          "time":  "23.30 - 01.30",
                          "gameId":  "tosm",
                          "streamerId":  "s32",
+                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
+                     },
+                     {
+                         "id":  "e498",
+                         "date":  "2026-08-10",
+                         "time":  "23.30 - 01.30",
+                         "gameId":  "tosm",
+                         "streamerId":  "s10",
+                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
+                     },
+                     {
+                         "id":  "e499",
+                         "date":  "2026-08-12",
+                         "time":  "23.30 - 01.30",
+                         "gameId":  "tosm",
+                         "streamerId":  "s10",
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      }
                  ],
@@ -6495,6 +7054,8 @@ const Util = (() => {
     { key: "sat", label: "ส" },
     { key: "sun", label: "อา" },
   ];
+  // Special value the "List Streamer" sheet's days column uses to mean "available every day".
+  const EVERY_DAY_LABEL = "ทุกวัน";
   function escapeHtml(str) {
     return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
@@ -6532,7 +7093,7 @@ const Util = (() => {
   function closeModal() {
     document.getElementById("modal-root").innerHTML = "";
   }
-  return { fmtMoney, pad2, toISODate, parseISODate, MONTH_NAMES_TH, DOW_TH, TIME_SLOTS, AVAIL_DAYS, escapeHtml, todayISO, avatarHTML, showToast, openModal, closeModal };
+  return { fmtMoney, pad2, toISODate, parseISODate, MONTH_NAMES_TH, DOW_TH, TIME_SLOTS, AVAIL_DAYS, EVERY_DAY_LABEL, escapeHtml, todayISO, avatarHTML, showToast, openModal, closeModal };
 })();
 
 
@@ -6550,6 +7111,9 @@ const DB = (() => {
     { name: "พฤศจิกายน 2569", gid: 1192033499 },
     { name: "ธันวาคม 2569", gid: 1508262743 },
   ];
+  // The "List Streamer" tab: one row per streamer per game, holding normal/discount price
+  // and availability. This is the source of truth for those fields when synced from Admin.
+  const LIST_STREAMER_GID = 1783567342;
   function sheetCsvUrl(gid) {
     return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
   }
@@ -6586,6 +7150,95 @@ const DB = (() => {
     if (/^TR$/.test(t)) return "tr";
     if (/^WARZ$/.test(t)) return "warz";
     return null;
+  }
+
+  // Game names in the "List Streamer" tab are typed loosely (case, spacing) so match case/space-insensitively.
+  function mapListSheetGameId(raw) {
+    const t = (raw || "").trim().toLowerCase().replace(/\s+/g, "");
+    if (t === "tosm") return "tosm";
+    if (t === "zone4") return "zone4";
+    if (t === "cabal") return "cabal";
+    if (t === "tr" || t.startsWith("tales")) return "tr";
+    if (t === "warz") return "warz";
+    return null;
+  }
+
+  // Parses the "List Streamer" tab: one row per streamer per game, columns are
+  // name, game, normal price, discount price, up to 3 time-slot cells, then a days cell.
+  // Time-slot/day cells hold the exact Thai labels from Util.TIME_SLOTS / Util.AVAIL_DAYS.
+  // When a streamer has multiple game rows, Google Sheets merges the name cell visually —
+  // only the first row's CSV cell has the name, the rest are blank — so the name is
+  // forward-filled the same way the schedule tab's merged Date column is.
+  function parseListStreamerCSV(csvText) {
+    const lines = csvText.split(/\r\n|\n/).slice(1); // row1 is the header
+    const rows = [];
+    let currentName = null;
+    lines.forEach((line) => {
+      if (!line.trim()) return;
+      const cols = splitCSVLine(line);
+      const nameRaw = (cols[0] || "").trim();
+      if (nameRaw) currentName = nameRaw;
+      const name = currentName;
+      if (!name) return;
+      const gameId = mapListSheetGameId(cols[1]);
+      if (!gameId) return;
+      const normalPrice = Number((cols[2] || "").trim()) || 0;
+      const discRaw = (cols[3] || "").trim();
+      const discountPrice = discRaw === "" ? null : (Number(discRaw) || 0);
+      const slotLabels = [cols[4], cols[5], cols[6]].map((c) => (c || "").trim()).filter(Boolean);
+      const timeSlots = Util.TIME_SLOTS.filter((t) => slotLabels.includes(t.label)).map((t) => t.key);
+      const daysRaw = (cols[7] || "").trim();
+      const days = daysRaw === Util.EVERY_DAY_LABEL
+        ? Util.AVAIL_DAYS.map((d) => d.key)
+        : Util.AVAIL_DAYS.filter((d) => daysRaw.split(/[,\/\s]+/).map((x) => x.trim()).includes(d.label)).map((d) => d.key);
+      rows.push({ name, gameId, normalPrice, discountPrice, timeSlots, days });
+    });
+    return rows;
+  }
+
+  // Applies List Streamer rows: matches streamers by name (creating new ones as needed), sets
+  // price per row's game, and merges (unions) availability across all of a streamer's rows since
+  // availability is stored per-streamer, not per-game. The sheet is treated as the source of
+  // truth for price/availability, so it fully overwrites those fields (but never touches photo
+  // or schedule data, and never touches streamers absent from this tab).
+  function applyListStreamerRows(rows) {
+    const nameToId = {};
+    state.streamers.forEach((s) => { nameToId[s.name] = s.id; });
+    let addedStreamers = 0;
+    const availByName = {};
+    rows.forEach((r) => {
+      if (!nameToId[r.name]) {
+        const created = addStreamer(r.name);
+        nameToId[r.name] = created.id;
+        addedStreamers++;
+      }
+      const sid = nameToId[r.name];
+      setPrice(sid, r.gameId, r.normalPrice, r.discountPrice);
+      if (!availByName[r.name]) availByName[r.name] = { timeSlots: new Set(), days: new Set() };
+      r.timeSlots.forEach((t) => availByName[r.name].timeSlots.add(t));
+      r.days.forEach((d) => availByName[r.name].days.add(d));
+    });
+    Object.keys(availByName).forEach((name) => {
+      const sid = nameToId[name];
+      updateStreamer(sid, {
+        availability: {
+          timeSlots: Array.from(availByName[name].timeSlots),
+          days: Array.from(availByName[name].days),
+        },
+      });
+    });
+    save();
+    return { addedStreamers, updatedCount: Object.keys(availByName).length };
+  }
+
+  // Fetches the List Streamer tab from the sheet and syncs price/availability into Admin data.
+  async function syncStreamersFromSheet() {
+    const res = await fetch(sheetCsvUrl(LIST_STREAMER_GID));
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = parseListStreamerCSV(text);
+    if (!rows.length) throw new Error("ไม่พบข้อมูลใน tab List Streamer");
+    return applyListStreamerRows(rows);
   }
 
   // Parses the sheet's raw CSV export into flat {date, time, gameId, streamerName, program} rows,
@@ -6886,7 +7539,7 @@ const DB = (() => {
     setPrice, deletePrice, getPrice, effectivePrice,
     listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
     getDayStatus, setDayStatus, getEntryCost,
-    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet,
+    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncStreamersFromSheet,
   };
 })();
 
@@ -7247,15 +7900,12 @@ const Calendar = (() => {
 })();
 
 
-// Real-time "who's live right now" board — embeds each game's official YouTube channel
-// live player directly (no API key needed) during its scheduled window. Outside a scheduled
-// window we skip the embed and show our own "not live yet / next up" card instead of
-// YouTube's raw "video unavailable" error, using the schedule data we already have.
+// "Who's live right now" board — a lightweight card grid (avatar + pulsing LIVE dot + game
+// badge) instead of heavy embedded video players. Live/offline status per game comes from the
+// schedule data we already have (is there an entry for this game whose time window covers now),
+// so it needs no API key and no per-streamer channel setup. Clicking a live card opens that
+// game's YouTube channel so you can actually watch.
 const LiveStream = (() => {
-  function frameUrl(channelId) {
-    return `https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=0&_=${Date.now()}`;
-  }
-
   function nowMinutesBangkok() {
     const parts = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false,
@@ -7285,7 +7935,7 @@ const LiveStream = (() => {
   }
 
   // For a game: finds the entry currently in its scheduled window today (if any),
-  // and the next upcoming one today (for the "not live yet" card).
+  // and the next upcoming one today (for the "not live yet" caption).
   function gameScheduleStatus(gameId) {
     const nowMin = nowMinutesBangkok();
     const todayEntries = DB.listScheduleByDate(Util.todayISO())
@@ -7303,23 +7953,38 @@ const LiveStream = (() => {
     return { current, next };
   }
 
-  function renderTileBody(g) {
+  function gameBadgeInitials(name) {
+    return (name || "?").replace(/[^A-Za-z0-9ก-๙]/g, "").slice(0, 2).toUpperCase();
+  }
+
+  function renderCard(g) {
     const status = gameScheduleStatus(g.id);
-    if (status.current) {
-      return `<div class="live-embed-wrap">
-        <iframe id="live-frame-${g.id}" src="${frameUrl(g.channelId)}" allow="autoplay; encrypted-media" allowfullscreen loading="lazy" frameborder="0"></iframe>
-      </div>`;
-    }
-    const s = status.next ? DB.getStreamer(status.next.streamerId) : null;
-    return `<div class="live-embed-wrap live-placeholder">
-      <div class="live-placeholder-inner">
-        <div class="live-placeholder-icon">⏳</div>
-        <div class="live-placeholder-title">ยังไม่ถึงเวลาไลฟ์</div>
-        ${status.next
-          ? `<div class="live-placeholder-next">รอบถัดไปวันนี้ ${Util.escapeHtml(status.next.time)}${s ? ` — ${Util.escapeHtml(s.name)}` : ""}</div>`
-          : `<div class="live-placeholder-next">ไม่มีคิวไลฟ์วันนี้แล้ว</div>`}
+    const isLive = !!status.current;
+    const entry = status.current || status.next;
+    const s = entry ? DB.getStreamer(entry.streamerId) : null;
+
+    const avatarHtml = s ? Util.avatarHTML(s, "") : `<div class="avatar-circle">${Util.escapeHtml(gameBadgeInitials(g.name))}</div>`;
+    const name = s ? s.name : g.fullName;
+    const statusLine = isLive
+      ? `<span class="live-card-status is-live"><span class="live-dot-inline"></span> LIVE</span>`
+      : status.next
+        ? `<span class="live-card-status is-offline">รอบถัดไป ${Util.escapeHtml(status.next.time)}</span>`
+        : `<span class="live-card-status is-offline">ไม่มีคิววันนี้แล้ว</span>`;
+
+    const tag = g.youtubeUrl
+      ? `<a href="${Util.escapeHtml(g.youtubeUrl)}" target="_blank" rel="noopener" class="live-card ${isLive ? "is-live" : "is-offline"}">`
+      : `<div class="live-card ${isLive ? "is-live" : "is-offline"}">`;
+    const closeTag = g.youtubeUrl ? "</a>" : "</div>";
+
+    return `${tag}
+      <div class="live-card-avatar-wrap">
+        ${avatarHtml}
+        ${isLive ? `<span class="live-pulse-dot"></span>` : ""}
+        <span class="live-game-badge" style="background:${g.color};">${Util.escapeHtml(gameBadgeInitials(g.name))}</span>
       </div>
-    </div>`;
+      <div class="live-card-name">${Util.escapeHtml(name)}</div>
+      ${statusLine}
+    ${closeTag}`;
   }
 
   function render(container) {
@@ -7327,26 +7992,21 @@ const LiveStream = (() => {
     const withChannel = allGames.filter((g) => g.channelId);
     const missing = allGames.filter((g) => !g.channelId);
 
+    const cards = withChannel
+      .map((g) => ({ g, isLive: !!gameScheduleStatus(g.id).current }))
+      .sort((a, b) => (b.isLive - a.isLive))
+      .map(({ g }) => renderCard(g))
+      .join("");
+
     container.innerHTML = `
       <div class="card">
         <div class="row between">
-          <h2>📡 ไลฟ์สดตอนนี้ — ทุกเกม</h2>
-          <button class="secondary small" id="live-refresh-all">🔄 รีเฟรชทั้งหมด</button>
+          <h2>📡 ไลฟ์สดตอนนี้</h2>
+          <button class="secondary small" id="live-refresh-all">🔄 รีเฟรช</button>
         </div>
-        <p style="color:var(--text-dim);font-size:12px;">ช่วงที่มีคิวไลฟ์ตามตารางจะขึ้นภาพสดให้อัตโนมัติ ช่วงที่ไม่มีคิวจะโชว์รอบถัดไปแทน</p>
+        <p style="color:var(--text-dim);font-size:12px;">อิงจากตารางไลฟ์ — ใครมีคิวอยู่ ณ ตอนนี้จะขึ้นสถานะ LIVE ให้อัตโนมัติ กดที่การ์ดเพื่อดูสด</p>
       </div>
-      ${withChannel.length ? `<div class="live-grid">
-        ${withChannel.map((g) => `
-          <div class="live-tile">
-            <div class="live-tile-header" style="border-left-color:${g.color};">
-              <span class="color-dot" style="background:${g.color}"></span>
-              <strong>${Util.escapeHtml(g.fullName)}</strong>
-              ${g.youtubeUrl ? `<a href="${Util.escapeHtml(g.youtubeUrl)}" target="_blank" rel="noopener" class="live-open-link">เปิดใน YouTube ↗</a>` : ""}
-            </div>
-            ${renderTileBody(g)}
-          </div>
-        `).join("")}
-      </div>` : `<div class="card empty-state">ยังไม่ได้ตั้ง Channel ID ให้เกมไหนเลย — ไปตั้งได้ที่หลังบ้าน &gt; เกม</div>`}
+      ${withChannel.length ? `<div class="card"><div class="live-card-grid">${cards}</div></div>` : `<div class="card empty-state">ยังไม่ได้ตั้ง Channel ID ให้เกมไหนเลย — ไปตั้งได้ที่หลังบ้าน &gt; เกม</div>`}
       ${missing.length ? `<div class="card"><p style="color:var(--text-dim);font-size:12px;">ยังไม่ได้ตั้ง Channel ID: ${missing.map((g) => Util.escapeHtml(g.name)).join(", ")} — ไปตั้งได้ที่หลังบ้าน &gt; เกม</p></div>` : ""}
     `;
 
@@ -7477,14 +8137,12 @@ const Summary = (() => {
     return { start: Util.toISODate(year, month, 1), end: Util.toISODate(year, month, lastDay) };
   }
 
-  // WarZ billing window: the 25th of the previous month through the 24th of this month
-  // (e.g. the "August" WarZ round runs 25 Jul – 24 Aug), instead of the calendar month.
-  // The boundary day itself (the 25th) belongs to the round that's just starting, not the
-  // one ending, so a single day's entries are never counted in two rounds at once.
+  // WarZ billing window: the 26th of the previous month through the 25th of this month
+  // (e.g. the "August" WarZ round runs 26 Jul – 25 Aug), instead of the calendar month.
   function warzRange(year, month) {
     let py = year, pm = month - 1;
     if (pm < 1) { pm = 12; py -= 1; }
-    return { start: Util.toISODate(py, pm, 25), end: Util.toISODate(year, month, 24) };
+    return { start: Util.toISODate(py, pm, 26), end: Util.toISODate(year, month, 25) };
   }
 
   function rangeForGame(gameId, year, month) {
@@ -7548,7 +8206,6 @@ const Summary = (() => {
     const summary = computeMonthSummary(state.year, state.month);
     const invoice = computeInvoice(summary.normalTotal);
     const monthTitle = `${Util.MONTH_NAMES_TH[state.month - 1]} ${state.year + 543}`;
-    const std = standardRange(state.year, state.month);
 
     const gameSections = Object.values(summary.byGame)
       .sort((a, b) => b.actualTotal - a.actualTotal)
@@ -7562,17 +8219,15 @@ const Summary = (() => {
             <td>฿${Util.fmtMoney(sb.actualTotal)}</td>
           </tr>`).join("");
         const gbInvoice = computeInvoice(gb.normalTotal);
-        const isCustomRange = gb.range.start !== std.start || gb.range.end !== std.end;
         return `<details class="game-summary">
           <summary>
             <span class="color-dot" style="background:${gb.game.color}"></span>
             ${Util.escapeHtml(gb.game.name)}
-            ${isCustomRange ? `<span style="font-size:11px;color:var(--text-dim);font-weight:400;">(รอบบิล ${formatRangeLabel(gb.range)})</span>` : ""}
+            <span style="font-size:11px;color:var(--text-dim);font-weight:400;">(รอบบิล ${formatRangeLabel(gb.range)})</span>
             <span class="gs-totals">
-              <span>งาน: ${gb.jobCount}</span>
-              <span>ปกติ: ฿${Util.fmtMoney(gb.normalTotal)}</span>
-              <span>จ่ายจริง: ฿${Util.fmtMoney(gb.actualTotal)}</span>
-              <span>ลูกค้าจ่าย: ฿${Util.fmtMoney(gbInvoice.grandTotal)}</span>
+              <span>จำนวน Content: ${gb.jobCount}</span>
+              <span>ยอดเรียกเก็บลูกค้า: ฿${Util.fmtMoney(gbInvoice.grandTotal)}</span>
+              <span>ราคาจ่ายสตรีมเมอร์: ฿${Util.fmtMoney(gb.actualTotal)}</span>
             </span>
           </summary>
           <table style="margin-top:10px;">
@@ -7585,7 +8240,7 @@ const Summary = (() => {
             </tbody>
           </table>
           <table style="margin-top:14px;">
-            <thead><tr><th>Streamer</th><th>จำนวนงาน</th><th>ราคาปกติรวม</th><th>ราคาจ่ายจริงรวม</th></tr></thead>
+            <thead><tr><th>Streamer</th><th>จำนวน Content</th><th>ราคาปกติรวม</th><th>ราคาจ่ายจริงรวม</th></tr></thead>
             <tbody>${streamerRows}</tbody>
           </table>
         </details>`;
@@ -7599,6 +8254,7 @@ const Summary = (() => {
             <div class="cal-title">${monthTitle}</div>
             <button class="secondary small" id="sm-next">›</button>
           </div>
+          <button class="secondary small" id="sm-reload-prices" title="ดึงตารางไลฟ์และราคา/ส่วนลด/ช่วงเวลาที่สะดวกล่าสุดจาก Google Sheet ทั้งหมด">↻ โหลดข้อมูลล่าสุด</button>
         </div>
       </div>
 
@@ -7633,6 +8289,31 @@ const Summary = (() => {
 
     container.querySelector("#sm-prev").addEventListener("click", () => shift(-1, container));
     container.querySelector("#sm-next").addEventListener("click", () => shift(1, container));
+    const reloadBtn = container.querySelector("#sm-reload-prices");
+    reloadBtn.addEventListener("click", async () => {
+      reloadBtn.disabled = true;
+      reloadBtn.textContent = "กำลังโหลด...";
+      const scheduleResult = await DB.syncScheduleFromSheet().catch((err) => ({ error: err }));
+      const priceResult = await DB.syncStreamersFromSheet().catch((err) => ({ error: err }));
+      render(container);
+      if (scheduleResult.error && priceResult.error) {
+        Util.showToast("โหลดข้อมูลไม่สำเร็จ: " + scheduleResult.error.message);
+        return;
+      }
+      const parts = [];
+      if (!scheduleResult.error) {
+        const failedNote = scheduleResult.failedTabs && scheduleResult.failedTabs.length ? ` (ดึงไม่ได้: ${scheduleResult.failedTabs.join(", ")})` : "";
+        parts.push(`ตาราง ${scheduleResult.newCount} คิว${failedNote}`);
+      } else {
+        parts.push(`ตารางดึงไม่ได้ (${scheduleResult.error.message})`);
+      }
+      if (!priceResult.error) {
+        parts.push(`ราคาอัปเดต ${priceResult.updatedCount} คน${priceResult.addedStreamers ? `, เพิ่มใหม่ ${priceResult.addedStreamers} คน` : ""}`);
+      } else {
+        parts.push(`ราคาดึงไม่ได้ (${priceResult.error.message})`);
+      }
+      Util.showToast(`โหลดข้อมูลล่าสุดแล้ว — ${parts.join(" / ")}`);
+    });
   }
 
   function shift(dir, container) {
@@ -7699,7 +8380,10 @@ const Admin = (() => {
       <div class="card">
         <div class="row between">
           <h2>Streamers (${streamers.length}${filtersActive ? ` / ${allStreamers.length}` : ""})</h2>
-          <button id="add-streamer">+ เพิ่ม Streamer</button>
+          <div class="row" style="gap:8px;">
+            <button class="secondary small" id="sync-streamers-sheet">↻ ซิงค์ราคา/เวลาว่าง จากชีท</button>
+            <button id="add-streamer">+ เพิ่ม Streamer</button>
+          </div>
         </div>
         <div class="row" style="gap:8px;margin-bottom:14px;flex-wrap:wrap;">
           <input type="text" id="streamer-search" placeholder="ค้นหาชื่อ Streamer..." value="${Util.escapeHtml(state.streamerSearch)}" style="flex:1;min-width:180px;">
@@ -7754,6 +8438,20 @@ const Admin = (() => {
     body.querySelector("#streamer-time-filter").addEventListener("change", (e) => {
       state.streamerTimeFilter = e.target.value;
       renderBody(body.closest("main"));
+    });
+    const syncBtn = body.querySelector("#sync-streamers-sheet");
+    syncBtn.addEventListener("click", async () => {
+      syncBtn.disabled = true;
+      syncBtn.textContent = "กำลังซิงค์...";
+      try {
+        const result = await DB.syncStreamersFromSheet();
+        renderBody(body.closest("main"));
+        Util.showToast(`ซิงค์แล้ว — อัปเดต ${result.updatedCount} คน${result.addedStreamers ? `, เพิ่มใหม่ ${result.addedStreamers} คน` : ""}`);
+      } catch (err) {
+        syncBtn.disabled = false;
+        syncBtn.textContent = "↻ ซิงค์ราคา/เวลาว่าง จากชีท";
+        alert("ซิงค์ไม่สำเร็จ: " + err.message);
+      }
     });
     body.querySelector("#add-streamer").addEventListener("click", () => {
       const name = prompt("ชื่อ Streamer:");
