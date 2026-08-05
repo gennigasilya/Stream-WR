@@ -316,7 +316,8 @@ tr:last-child td { border-bottom: none; }
 .brief-box-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .brief-box { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; border-top: 3px solid var(--border); }
 .brief-box .brief-game-name { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
-.brief-box .brief-text { font-size: 13px; color: var(--text); white-space: pre-wrap; line-height: 1.5; }
+.brief-box .brief-text { font-size: 13px; color: var(--text); white-space: pre-wrap; line-height: 1.5; word-break: break-word; }
+.brief-box .brief-text a { color: var(--accent); text-decoration: underline; }
 .brief-box .brief-dates { font-size: 11px; color: var(--text-dim); margin-top: 8px; font-weight: 600; }
 .brief-box .brief-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
 .brief-row { border-top: 1px solid var(--border); padding: 14px 0; }
@@ -9110,6 +9111,12 @@ const Util = (() => {
   function escapeHtml(str) {
     return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
+  // Turns http(s):// URLs in already-escaped text into clickable links. Must run AFTER
+  // escapeHtml (operates on the escaped string) so it never reintroduces raw HTML from the
+  // source text.
+  function linkify(escapedText) {
+    return String(escapedText ?? "").replace(/(https?:\/\/[^\s<]+)/g, (url) => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+  }
   // "Today" is always computed in Thailand time (Asia/Bangkok, UTC+7), regardless of the
   // viewer's own device timezone, so the highlighted date matches Thailand's clock.
   function todayISO() {
@@ -9144,7 +9151,7 @@ const Util = (() => {
   function closeModal() {
     document.getElementById("modal-root").innerHTML = "";
   }
-  return { fmtMoney, pad2, toISODate, parseISODate, MONTH_NAMES_TH, DOW_TH, TIME_SLOTS, AVAIL_DAYS, EVERY_DAY_LABEL, escapeHtml, todayISO, avatarHTML, showToast, openModal, closeModal };
+  return { fmtMoney, pad2, toISODate, parseISODate, MONTH_NAMES_TH, DOW_TH, TIME_SLOTS, AVAIL_DAYS, EVERY_DAY_LABEL, escapeHtml, linkify, todayISO, avatarHTML, showToast, openModal, closeModal };
 })();
 
 
@@ -10240,7 +10247,7 @@ const LiveStream = (() => {
     else if (endLabel) dateLine = `ถึง ${endLabel}`;
     return `<div class="brief-box" style="border-top-color:${g.color};">
       <div class="brief-game-name" style="color:${g.color};">${Util.escapeHtml(g.name)}</div>
-      ${hasText ? `<div class="brief-text">${Util.escapeHtml(brief.text)}</div>` : `<div class="brief-empty">ยังไม่มีบรีฟ</div>`}
+      ${hasText ? `<div class="brief-text">${Util.linkify(Util.escapeHtml(brief.text))}</div>` : `<div class="brief-empty">ยังไม่มีบรีฟ</div>`}
       ${dateLine ? `<div class="brief-dates">📅 ${Util.escapeHtml(dateLine)}</div>` : ""}
     </div>`;
   }
@@ -10427,7 +10434,7 @@ const SetupQueue = (() => {
         <input type="text" id="setup-search" placeholder="ค้นหาชื่อ Streamer..." value="${Util.escapeHtml(state.search)}" style="width:100%;margin:12px 0;">
         <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Streamer</th><th>เคย Set แล้ว (เกม) — วันที่ Set vs วันที่ Live</th><th>ประวัติ</th></tr></thead>
+          <thead><tr><th>Streamer</th><th>เกมที่ Set แล้ว</th><th>เกมที่รอ Set — วันเวลาที่ Set vs วันที่ Live</th></tr></thead>
           <tbody>
             ${names.length === 0 ? `<tr><td colspan="3"><div class="empty-state">ไม่พบข้อมูล — ลองกดซิงค์จากชีท</div></td></tr>` : ""}
             ${names.map((name) => {
@@ -10435,12 +10442,18 @@ const SetupQueue = (() => {
               const doneRecByGame = {};
               recs.filter((r) => r.done).forEach((r) => { doneRecByGame[r.game] = r; }); // last one wins = most recent
               const doneGameNames = Object.keys(doneRecByGame);
+              const pendingRecs = recs.filter((r) => !r.done);
               return `<tr>
                 <td style="white-space:nowrap;">${Util.escapeHtml(name)}</td>
-                <td>${doneGameNames.length ? doneGameNames.map((g) => renderSetupVsLiveLine(g, doneRecByGame[g])).join("") : `<span style="color:var(--text-dim);font-size:12px;">—</span>`}</td>
-                <td style="font-size:12px;color:var(--text-dim);white-space:nowrap;">
-                  ${recs.map((r) => `${Util.escapeHtml(r.game)} — ${Util.escapeHtml(r.dateRaw)}${r.time ? " " + Util.escapeHtml(r.time) : ""} ${r.done ? "✅" : "⏳"}`).join("<br>")}
+                <td style="font-size:12px;white-space:nowrap;">
+                  ${doneGameNames.length ? doneGameNames.map((g) => {
+                    const r = doneRecByGame[g];
+                    const setupISO = parseSetupDate(r.dateRaw);
+                    const setupLabel = setupISO ? formatThaiDate(setupISO) : Util.escapeHtml(r.dateRaw || "?");
+                    return `<div style="margin-bottom:4px;"><span class="badge" style="background:${gameBadgeColor(g)};">${Util.escapeHtml(g)}</span> Set ${setupLabel}${r.time ? " " + Util.escapeHtml(r.time) : ""}</div>`;
+                  }).join("") : `<span style="color:var(--text-dim);">ไม่มี</span>`}
                 </td>
+                <td>${pendingRecs.length ? pendingRecs.map((r) => renderSetupVsLiveLine(r.game, r)).join("") : `<span style="color:var(--text-dim);font-size:12px;">—</span>`}</td>
               </tr>`;
             }).join("")}
           </tbody>
