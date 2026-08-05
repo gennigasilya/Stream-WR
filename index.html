@@ -7445,6 +7445,34 @@ const DB = (() => {
     return load();
   }
 
+  // Once a browser has saved data in localStorage, load() never looks at the bundled seed
+  // again — so a device that first opened the app before a game's youtubeUrl/channelId was
+  // set (or before it changed) is stuck with the old value forever. This pulls just those two
+  // fields from the bundled seed into the existing games, without touching anything else
+  // (streamers, schedule, prices, or any other admin edits stay exactly as they are).
+  async function syncGamesFromSeed() {
+    let seed;
+    if (typeof SEED_DATA !== "undefined") {
+      seed = SEED_DATA;
+    } else {
+      const res = await fetch("data/seed.json");
+      seed = await res.json();
+    }
+    let updated = 0;
+    seed.games.forEach((sg) => {
+      const g = getGame(sg.id);
+      if (g) {
+        g.youtubeUrl = sg.youtubeUrl;
+        g.channelId = sg.channelId;
+      } else {
+        state.games.push({ ...sg });
+      }
+      updated++;
+    });
+    save();
+    return { updated };
+  }
+
   // Replaces the schedule with the given flat {date,time,gameId,streamerName,program} rows,
   // matching streamers by name so existing profiles (prices, photo, availability) are left untouched.
   // New streamer names are added; per-entry tournament (free) flags carry over when the same
@@ -7539,7 +7567,7 @@ const DB = (() => {
     setPrice, deletePrice, getPrice, effectivePrice,
     listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
     getDayStatus, setDayStatus, getEntryCost,
-    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncStreamersFromSheet,
+    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncStreamersFromSheet, syncGamesFromSeed,
   };
 })();
 
@@ -8007,12 +8035,29 @@ const LiveStream = (() => {
         <p style="color:var(--text-dim);font-size:12px;">อิงจากตารางไลฟ์ — ใครมีคิวอยู่ ณ ตอนนี้จะขึ้นสถานะ LIVE ให้อัตโนมัติ กดที่การ์ดเพื่อดูสด</p>
       </div>
       ${withChannel.length ? `<div class="card"><div class="live-card-grid">${cards}</div></div>` : `<div class="card empty-state">ยังไม่ได้ตั้ง Channel ID ให้เกมไหนเลย — ไปตั้งได้ที่หลังบ้าน &gt; เกม</div>`}
-      ${missing.length ? `<div class="card"><p style="color:var(--text-dim);font-size:12px;">ยังไม่ได้ตั้ง Channel ID: ${missing.map((g) => Util.escapeHtml(g.name)).join(", ")} — ไปตั้งได้ที่หลังบ้าน &gt; เกม</p></div>` : ""}
+      ${missing.length ? `<div class="card">
+        <p style="color:var(--text-dim);font-size:12px;margin-bottom:10px;">ยังไม่ได้ตั้ง Channel ID: ${missing.map((g) => Util.escapeHtml(g.name)).join(", ")} — ไปตั้งได้ที่หลังบ้าน &gt; เกม หรือลองซิงค์ค่าเริ่มต้นก่อน</p>
+        <button class="secondary small" id="live-sync-games">↻ ซิงค์ Channel ID เริ่มต้น</button>
+      </div>` : ""}
     `;
 
     container.querySelector("#live-refresh-all").addEventListener("click", () => {
       render(container);
       Util.showToast("รีเฟรชแล้ว");
+    });
+    const syncBtn = container.querySelector("#live-sync-games");
+    if (syncBtn) syncBtn.addEventListener("click", async () => {
+      syncBtn.disabled = true;
+      syncBtn.textContent = "กำลังซิงค์...";
+      try {
+        await DB.syncGamesFromSeed();
+        render(container);
+        Util.showToast("ซิงค์ Channel ID แล้ว");
+      } catch (err) {
+        syncBtn.disabled = false;
+        syncBtn.textContent = "↻ ซิงค์ Channel ID เริ่มต้น";
+        Util.showToast("ซิงค์ไม่สำเร็จ: " + err.message);
+      }
     });
   }
 
