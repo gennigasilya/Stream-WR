@@ -10382,17 +10382,25 @@ const DB = (() => {
   // matching streamers by name so existing profiles (prices, photo, availability) are left untouched.
   // New streamer names are added; per-entry tournament (free) flags carry over when the same
   // date+time+game+streamer combination still exists in the new rows.
+  // Staff type KOL names into the sheet by hand, so the same person shows up as "1nonCh" in one
+  // row and "1nonch" in another. Matching (and the tournament-flag carry-over key below) both go
+  // through this normalized form so a case/spacing slip never spawns a duplicate streamer.
+  function normStreamerName(name) {
+    return (name || "").trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
   function applyScheduleRows(rows) {
     const nameToId = {};
-    state.streamers.forEach((s) => { nameToId[s.name] = s.id; });
+    state.streamers.forEach((s) => { nameToId[normStreamerName(s.name)] = s.id; });
     let addedStreamers = 0;
-    const seenNames = new Set();
+    const seenKeys = new Set();
     rows.forEach((r) => {
-      if (seenNames.has(r.streamerName)) return;
-      seenNames.add(r.streamerName);
-      if (!nameToId[r.streamerName]) {
+      const key = normStreamerName(r.streamerName);
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+      if (!nameToId[key]) {
         const created = addStreamer(r.streamerName);
-        nameToId[r.streamerName] = created.id;
+        nameToId[key] = created.id;
         addedStreamers++;
       }
     });
@@ -10404,17 +10412,18 @@ const DB = (() => {
       if (!e.isTournament) return;
       const name = idToName[e.streamerId];
       if (!name) return;
-      oldTournamentKeys.add(`${e.date}|${e.time}|${e.gameId}|${name}`);
+      oldTournamentKeys.add(`${e.date}|${e.time}|${e.gameId}|${normStreamerName(name)}`);
     });
 
     state.schedule = rows.map((r) => {
-      const key = `${r.date}|${r.time}|${r.gameId}|${r.streamerName}`;
+      const normName = normStreamerName(r.streamerName);
+      const key = `${r.date}|${r.time}|${r.gameId}|${normName}`;
       return {
         id: uid("e"),
         date: r.date,
         time: r.time,
         gameId: r.gameId,
-        streamerId: nameToId[r.streamerName],
+        streamerId: nameToId[normName],
         program: r.program,
         isTournament: oldTournamentKeys.has(key),
       };
