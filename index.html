@@ -231,6 +231,7 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .cal-cell .badges { display: flex; flex-wrap: wrap; gap: 3px; }
 .cal-cell .cal-names { display: flex; flex-direction: column; gap: 2px; }
 .cal-cell .cal-name-item { font-size: 11px; color: var(--text); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-cell .cal-name-time { color: var(--text-dim); font-weight: 600; font-variant-numeric: tabular-nums; }
 .cal-cell .cal-name-item.tournament { color: var(--warning); font-weight: 700; }
 .cal-cell .cal-name-empty { font-size: 11px; color: var(--text-dim); }
 .game-badge {
@@ -421,6 +422,8 @@ details.game-summary .gs-totals { margin-left: auto; display: flex; gap: 16px; f
 <div id="modal-root"></div>
 <div id="toast-root"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
 const SEED_DATA = {
@@ -6903,7 +6906,7 @@ const SEED_DATA = {
                          "date":  "2026-08-06",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
-                         "streamerId":  "s9",
+                         "streamerId":  "s60",
                          "program":  ""
                      },
                      {
@@ -9515,6 +9518,33 @@ const Util = (() => {
 })();
 
 
+// Firebase Realtime Database — used only to sync the "tournament (free)" flag on schedule
+// entries across devices/team members in real time, since localStorage alone is per-browser
+// and different staff toggling this on their own device would never see each other's changes,
+// leading to wrong Monthly Summary totals. Everything else in the app still works exactly the
+// same (localStorage) if Firebase fails to load (ad-blocker, offline, etc.) — fbDb just stays
+// null and the sync functions in db.js no-op.
+const firebaseConfig = {
+  apiKey: "AIzaSyAXaOabKKf_q_kpwFxam_NXq6Q4C5aGURc",
+  authDomain: "genniga-7b94d.firebaseapp.com",
+  databaseURL: "https://genniga-7b94d-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "genniga-7b94d",
+  storageBucket: "genniga-7b94d.firebasestorage.app",
+  messagingSenderId: "453707544395",
+  appId: "1:453707544395:web:839b3d30a317516c3d9ace",
+};
+
+let fbDb = null;
+try {
+  if (typeof firebase !== "undefined") {
+    firebase.initializeApp(firebaseConfig);
+    fbDb = firebase.database();
+  }
+} catch (e) {
+  fbDb = null;
+}
+
+
 // Data layer: localStorage-backed store, seeded from data/seed.json on first run.
 const DB = (() => {
   const STORAGE_KEY = "streamer_manager_db_v1";
@@ -9950,11 +9980,58 @@ const DB = (() => {
     state.schedule = state.schedule.filter((e) => e.id !== id);
     save();
   }
+  // Schedule entry IDs are regenerated on every sheet resync (see applyScheduleRows), so they
+  // can't be used as a stable cross-device key for the tournament flag — this composite key
+  // (date+time+game+streamer name) is what's already used locally to carry the flag through a
+  // resync, and doubles as the Firebase path key. Firebase Realtime Database keys can't contain
+  // ". # $ [ ] /", so those are stripped out.
+  function fbTournamentKey(date, time, gameId, streamerName) {
+    const clean = (s) => String(s || "").replace(/[.#$\[\]/]/g, "_");
+    return `${date}_${clean(time)}_${gameId}_${clean(streamerName)}`;
+  }
+
   function setEntryTournament(id, isTournament) {
     const e = state.schedule.find((e) => e.id === id);
     if (!e) return;
     e.isTournament = isTournament;
     save();
+    if (fbDb) {
+      const s = getStreamer(e.streamerId);
+      if (s) fbDb.ref("tournamentFlags/" + fbTournamentKey(e.date, e.time, e.gameId, s.name)).set(isTournament).catch(() => {});
+    }
+  }
+
+  // Overlays Firebase's tournament flags (the cross-device source of truth) onto the current
+  // schedule. Called both when Firebase pushes a live update and right after every schedule
+  // resync (which would otherwise reset flags to whatever the old same-device carry-over found).
+  let lastTournamentSnapshot = null;
+  function applyTournamentFlagsFromSnapshot(snapshotVal) {
+    if (!snapshotVal) return false;
+    const idToName = {};
+    state.streamers.forEach((s) => { idToName[s.id] = s.name; });
+    let changed = false;
+    state.schedule.forEach((e) => {
+      const name = idToName[e.streamerId];
+      if (!name) return;
+      const flag = !!snapshotVal[fbTournamentKey(e.date, e.time, e.gameId, name)];
+      if (e.isTournament !== flag) { e.isTournament = flag; changed = true; }
+    });
+    if (changed) save();
+    return changed;
+  }
+
+  let tournamentListenerAttached = false;
+  // Subscribes to live tournament-flag changes from any device; onChange is called (with no
+  // args) whenever something actually changed, so the caller can re-render. Safe to call
+  // multiple times — only attaches once. No-ops entirely if Firebase didn't load.
+  function listenTournamentFlags(onChange) {
+    if (!fbDb || tournamentListenerAttached) return;
+    tournamentListenerAttached = true;
+    fbDb.ref("tournamentFlags").on("value", (snap) => {
+      lastTournamentSnapshot = snap.val();
+      const changed = applyTournamentFlagsFromSnapshot(lastTournamentSnapshot);
+      if (changed && typeof onChange === "function") onChange();
+    });
   }
 
   // ---------- Day status: normal | no_live (whole day cancelled) ----------
@@ -10091,6 +10168,9 @@ const DB = (() => {
         isTournament: oldTournamentKeys.has(key),
       };
     });
+    // Firebase (cross-device) wins over the same-device carry-over above, if we have a cached
+    // snapshot — otherwise a resync would silently drop tournament flags set from another device.
+    if (lastTournamentSnapshot) applyTournamentFlagsFromSnapshot(lastTournamentSnapshot);
     save();
     return { addedStreamers, newCount: state.schedule.length };
   }
@@ -10146,6 +10226,7 @@ const DB = (() => {
     getDayStatus, setDayStatus, getEntryCost,
     exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncStreamersFromSheet, syncGamesFromSeed, syncPhotosFromSeed, syncBriefsFromSheet,
     syncSetupFromSheet, listSetupRecords, setupGamesForStreamer,
+    listenTournamentFlags,
   };
 })();
 
@@ -10243,7 +10324,8 @@ const Calendar = (() => {
     if (!entries.length) return `<div class="cal-name-empty">—</div>`;
     return entries.map((e) => {
       const s = DB.getStreamer(e.streamerId);
-      return `<div class="cal-name-item ${e.isTournament ? "tournament" : ""}">${e.isTournament ? "🏆 " : ""}${Util.escapeHtml(s ? s.name : "?")}</div>`;
+      const startTime = (e.time || "").split("-")[0].trim().replace(".", ":");
+      return `<div class="cal-name-item ${e.isTournament ? "tournament" : ""}">${e.isTournament ? "🏆 " : ""}<span class="cal-name-time">${Util.escapeHtml(startTime)}</span> ${Util.escapeHtml(s ? s.name : "?")}</div>`;
     }).join("");
   }
 
@@ -10425,18 +10507,11 @@ const Calendar = (() => {
     if (app) render(app);
   }
 
-  // Compact "normal/discount price + available days & times" line shown under each session row,
-  // so admin can see it at a glance without opening the Streamer detail page.
-  function sessionSubInfo(s, gameId) {
+  // Compact "available days & times" line shown under each session row, so admin can see it
+  // at a glance without opening the Streamer detail page. (Price used to show here too, but
+  // Dashboard is a public-facing schedule view, so it was dropped — see Admin/Summary instead.)
+  function sessionSubInfo(s) {
     if (!s) return "";
-    const p = DB.getPrice(s.id, gameId);
-    const hasDiscount = p && p.discountPrice !== null && p.discountPrice !== undefined && p.discountPrice !== "";
-    const priceText = !p
-      ? "ยังไม่ตั้งราคา"
-      : hasDiscount
-      ? `ปกติ ฿${Util.fmtMoney(p.normalPrice)} → ลด ฿${Util.fmtMoney(p.discountPrice)}`
-      : `ราคา ฿${Util.fmtMoney(p.normalPrice)}`;
-
     const avail = s.availability || { timeSlots: [], days: [] };
     const slotLabels = Util.TIME_SLOTS.filter((t) => avail.timeSlots.includes(t.key)).map((t) => t.label);
     const dayLabels = Util.AVAIL_DAYS.filter((d) => avail.days.includes(d.key)).map((d) => d.label);
@@ -10444,7 +10519,7 @@ const Calendar = (() => {
       ? `สะดวก: ${[...slotLabels, ...dayLabels].join(" ")}`
       : "ยังไม่ระบุเวลาสะดวก";
 
-    return `<div class="session-row-sub"><span>${Util.escapeHtml(priceText)}</span><span>${Util.escapeHtml(availText)}</span></div>`;
+    return `<div class="session-row-sub"><span>${Util.escapeHtml(availText)}</span></div>`;
   }
 
   function openDayModal(dateISO) {
@@ -10456,7 +10531,6 @@ const Calendar = (() => {
     let rows = entries.map((e) => {
       const g = DB.getGame(e.gameId);
       const s = DB.getStreamer(e.streamerId);
-      const cost = DB.getEntryCost(e);
       return `<div class="session-row ${e.isTournament ? "is-tournament" : ""}">
         <div class="session-row-main">
           <span class="badge" style="background:${g ? g.color : "#666"}">${g ? Util.escapeHtml(g.name) : "?"}</span>
@@ -10464,9 +10538,8 @@ const Calendar = (() => {
           ${Util.avatarHTML(s, "tiny")}
           <a class="streamer-link" data-streamer="${s ? s.id : ""}">${Util.escapeHtml(s ? s.name : "ไม่ระบุ")}</a>
           <button class="tour-icon-toggle ${e.isTournament ? "active" : ""}" data-toggle-tournament="${e.id}" title="${e.isTournament ? "ยกเลิกทัวร์นาเมนต์ (คิดเงินตามปกติ)" : "ทำเครื่องหมายว่าคนนี้มาทัวร์นาเมนต์ฟรี"}">🏆</button>
-          <span class="price ${cost.free ? "free" : ""}">${cost.free ? "ฟรี" : "฿" + Util.fmtMoney(cost.actual)}</span>
         </div>
-        ${sessionSubInfo(s, e.gameId)}
+        ${sessionSubInfo(s)}
       </div>`;
     }).join("");
     if (!entries.length) rows = `<div class="empty-state">ไม่มีคิวไลฟ์ในวันนี้</div>`;
@@ -11771,6 +11844,11 @@ const Admin = (() => {
 
   window.addEventListener("hashchange", router);
   router();
+
+  // Live cross-device tournament-flag updates (see js/firebase-init.js) — re-render whatever
+  // page is currently open whenever someone (this device or another) toggles a tournament flag,
+  // so Dashboard and the cost totals it feeds into Summary stay correct for everyone watching.
+  DB.listenTournamentFlags(() => router());
 })();
 
 </script>
