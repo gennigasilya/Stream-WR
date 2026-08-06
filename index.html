@@ -339,7 +339,7 @@ tr:last-child td { border-bottom: none; }
 .brief-box .brief-dates { font-size: 11px; color: var(--text-dim); margin-top: 8px; font-weight: 600; }
 .brief-box .brief-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
 .brief-row { border-top: 1px solid var(--border); padding: 14px 0; }
-.brief-row textarea { width: 100%; min-height: 60px; font-family: inherit; padding: 8px; border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
+.brief-row textarea { width: 100%; min-height: 160px; font-family: inherit; padding: 8px; border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
 .stat-tile { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
@@ -9851,8 +9851,6 @@ const DB = (() => {
     { name: "พฤศจิกายน 2569", gid: 1192033499 },
     { name: "ธันวาคม 2569", gid: 1508262743 },
   ];
-  // The "Brief" tab: one column per game, holding free-text promo notes for streamers.
-  const BRIEF_GID = 2087813979;
   // The "ตาราง Set Up" tab: one row per OBS setup appointment (streamer, game, date, time, status).
   const SETUP_GID = 1774117405;
   function sheetCsvUrl(gid) {
@@ -9909,49 +9907,6 @@ const DB = (() => {
     }
     if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
     return rows;
-  }
-
-  // Parses the "Brief" tab: one column per game (header row = game names), every non-empty
-  // cell below it is a block of promo-text notes for that game. Blocks are joined with a blank
-  // line between them. The literal "Timeline :" label cells carry no actual date and are skipped.
-  function parseBriefCSV(csvText) {
-    const rows = parseCSVTable(csvText);
-    if (!rows.length) return {};
-    const header = rows[0];
-    const gameIdByCol = header.map((h) => mapListSheetGameId(h));
-    const blocks = {};
-    for (let r = 1; r < rows.length; r++) {
-      (rows[r] || []).forEach((cell, col) => {
-        const gameId = gameIdByCol[col];
-        if (!gameId) return;
-        const trimmed = (cell || "").trim();
-        if (!trimmed || trimmed === "Timeline :") return;
-        if (!blocks[gameId]) blocks[gameId] = [];
-        blocks[gameId].push(trimmed);
-      });
-    }
-    const result = {};
-    Object.keys(blocks).forEach((gameId) => { result[gameId] = blocks[gameId].join("\n\n"); });
-    return result;
-  }
-
-  // Pulls promo text into each game's brief.text from the sheet; startDate/endDate (set
-  // manually in Admin, since the sheet has no usable date data) are left untouched.
-  async function syncBriefsFromSheet() {
-    const res = await fetch(sheetCsvUrl(BRIEF_GID));
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const briefs = parseBriefCSV(text);
-    let updated = 0;
-    Object.keys(briefs).forEach((gameId) => {
-      const g = getGame(gameId);
-      if (!g) return;
-      const existing = g.brief || { text: "", startDate: null, endDate: null };
-      g.brief = { text: briefs[gameId], startDate: existing.startDate, endDate: existing.endDate };
-      updated++;
-    });
-    save();
-    return { updated };
   }
 
   // Parses the "ตาราง Set Up" tab: row 1 is a title ("SET UP OBS"), row 2 is the header
@@ -10012,17 +9967,6 @@ const DB = (() => {
     if (/^Cabal/.test(t)) return "cabal";
     if (/^TR$/.test(t)) return "tr";
     if (/^WARZ$/.test(t)) return "warz";
-    return null;
-  }
-
-  // Game names in the "Brief" tab header are typed loosely (case, spacing) so match case/space-insensitively.
-  function mapListSheetGameId(raw) {
-    const t = (raw || "").trim().toLowerCase().replace(/\s+/g, "");
-    if (t === "tosm") return "tosm";
-    if (t === "zone4") return "zone4";
-    if (t === "cabal") return "cabal";
-    if (t === "tr" || t.startsWith("tales")) return "tr";
-    if (t === "warz") return "warz";
     return null;
   }
 
@@ -10531,7 +10475,7 @@ const DB = (() => {
     setPrice, deletePrice, getPrice, effectivePrice,
     listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
     getDayStatus, setDayStatus, getEntryCost,
-    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncGamesFromSeed, syncPhotosFromSeed, syncBriefsFromSheet,
+    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncGamesFromSeed, syncPhotosFromSeed,
     syncSetupFromSheet, listSetupRecords, setupGamesForStreamer,
     listenTournamentFlags, listenStreamerUpdates,
   };
@@ -11048,8 +10992,7 @@ const LiveStream = (() => {
     </div>`;
   }
 
-  function render(container, opts) {
-    opts = opts || {};
+  function render(container) {
     const allGames = DB.listGames();
     const withChannel = allGames.filter((g) => g.channelId);
     const missing = allGames.filter((g) => !g.channelId);
@@ -11101,14 +11044,14 @@ const LiveStream = (() => {
         const gameId = card.getAttribute("data-toggle-embed");
         if (activeEmbeds.has(gameId)) activeEmbeds.delete(gameId);
         else activeEmbeds.add(gameId);
-        render(container, { skipAutoSync: true });
+        render(container);
       };
       card.addEventListener("click", toggle);
       card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
     });
     container.querySelectorAll("[data-close-embed]").forEach((btn) => btn.addEventListener("click", () => {
       activeEmbeds.delete(btn.getAttribute("data-close-embed"));
-      render(container, { skipAutoSync: true });
+      render(container);
     }));
     const syncBtn = container.querySelector("#live-sync-games");
     if (syncBtn) syncBtn.addEventListener("click", async () => {
@@ -11124,27 +11067,6 @@ const LiveStream = (() => {
         Util.showToast("ซิงค์ไม่สำเร็จ: " + err.message);
       }
     });
-
-    // Silently pull the latest Brief text from the sheet in the background so anyone viewing
-    // this public page — not just the admin who clicked a sync button — sees an up-to-date
-    // Brief without needing to refresh manually. Only re-renders if the content actually
-    // changed, and never bothers a random visitor with a sync-failure toast.
-    if (!opts.skipAutoSync) {
-      const beforeSnapshot = JSON.stringify(DB.listGames().map((g) => g.brief));
-      DB.syncBriefsFromSheet().then(() => {
-        const afterSnapshot = JSON.stringify(DB.listGames().map((g) => g.brief));
-        if (afterSnapshot !== beforeSnapshot) render(container, { skipAutoSync: true });
-      }).catch(() => {
-        // Some in-app browsers (e.g. the Google app's built-in browser) block background
-        // fetches to other Google services like Sheets, even though Safari/Chrome don't — a
-        // silent toast would leave visitors staring at possibly-stale data with no clue why.
-        const warn = document.createElement("div");
-        warn.className = "card";
-        warn.style.border = "2px solid var(--warning)";
-        warn.innerHTML = `<p style="color:var(--warning);font-size:13px;margin:0;">⚠️ โหลดข้อมูลล่าสุดจากชีทไม่ได้ อาจเป็นเพราะเปิดผ่านเบราว์เซอร์ในแอป (เช่น แอป Google) — ลองเปิดผ่าน Safari หรือ Chrome โดยตรงแทน</p>`;
-        container.prepend(warn);
-      });
-    }
   }
 
   return { render };
@@ -12024,9 +11946,8 @@ const Admin = (() => {
       <div class="card">
         <div class="row between">
           <h2>Brief สำหรับหน้าไลฟ์สด</h2>
-          <button class="secondary small" id="sync-brief-sheet">↻ ซิงค์ Brief จากชีท</button>
         </div>
-        <p style="color:var(--text-dim);font-size:12px;margin-top:-4px;">โน้ตสิ่งที่อยากให้ Streamer โปรโมทของแต่ละเกม พร้อมช่วงวันที่ — จะไปแสดงเป็นกล่องในหน้า "ไลฟ์สด" (ข้อความดึงได้จากชีท แต่ช่วงวันที่ต้องตั้งเองตรงนี้)</p>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:-4px;">โน้ตสิ่งที่อยากให้ Streamer โปรโมทของแต่ละเกม พร้อมช่วงวันที่ — จะไปแสดงเป็นกล่องในหน้า "ไลฟ์สด"</p>
         ${games.map((g) => {
           const brief = g.brief || { text: "", startDate: null, endDate: null };
           return `<div class="brief-row" data-brief-row="${g.id}">
@@ -12076,20 +11997,6 @@ const Admin = (() => {
       DB.updateGame(id, { brief: { text, startDate, endDate } });
       Util.showToast("บันทึก Brief แล้ว — หน้าไลฟ์สดอัปเดตอัตโนมัติ");
     }));
-    const syncBriefBtn = body.querySelector("#sync-brief-sheet");
-    syncBriefBtn.addEventListener("click", async () => {
-      syncBriefBtn.disabled = true;
-      syncBriefBtn.textContent = "กำลังซิงค์...";
-      try {
-        const result = await DB.syncBriefsFromSheet();
-        renderBody(body.closest("main"));
-        Util.showToast(`ซิงค์ Brief แล้ว — อัปเดต ${result.updated} เกม`);
-      } catch (err) {
-        syncBriefBtn.disabled = false;
-        syncBriefBtn.textContent = "↻ ซิงค์ Brief จากชีท";
-        alert("ซิงค์ไม่สำเร็จ: " + err.message);
-      }
-    });
   }
 
   return { render };
