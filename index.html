@@ -9851,9 +9851,6 @@ const DB = (() => {
     { name: "พฤศจิกายน 2569", gid: 1192033499 },
     { name: "ธันวาคม 2569", gid: 1508262743 },
   ];
-  // The "List Streamer" tab: one row per streamer per game, holding normal/discount price
-  // and availability. This is the source of truth for those fields when synced from Admin.
-  const LIST_STREAMER_GID = 1783567342;
   // The "Brief" tab: one column per game, holding free-text promo notes for streamers.
   const BRIEF_GID = 2087813979;
   // The "ตาราง Set Up" tab: one row per OBS setup appointment (streamer, game, date, time, status).
@@ -10018,7 +10015,7 @@ const DB = (() => {
     return null;
   }
 
-  // Game names in the "List Streamer" tab are typed loosely (case, spacing) so match case/space-insensitively.
+  // Game names in the "Brief" tab header are typed loosely (case, spacing) so match case/space-insensitively.
   function mapListSheetGameId(raw) {
     const t = (raw || "").trim().toLowerCase().replace(/\s+/g, "");
     if (t === "tosm") return "tosm";
@@ -10027,91 +10024,6 @@ const DB = (() => {
     if (t === "tr" || t.startsWith("tales")) return "tr";
     if (t === "warz") return "warz";
     return null;
-  }
-
-  // Parses the "List Streamer" tab: one row per streamer per game, columns are
-  // name, game, normal price, discount price, up to 3 time-slot cells, then a days cell.
-  // Time-slot/day cells hold the exact Thai labels from Util.TIME_SLOTS / Util.AVAIL_DAYS.
-  // When a streamer has multiple game rows, Google Sheets merges the name cell visually —
-  // only the first row's CSV cell has the name, the rest are blank — so the name is
-  // forward-filled the same way the schedule tab's merged Date column is.
-  function parseListStreamerCSV(csvText) {
-    const lines = csvText.split(/\r\n|\n/).slice(1); // row1 is the header
-    const rows = [];
-    let currentName = null;
-    lines.forEach((line) => {
-      if (!line.trim()) return;
-      const cols = splitCSVLine(line);
-      const nameRaw = (cols[0] || "").trim();
-      if (nameRaw) currentName = nameRaw;
-      const name = currentName;
-      if (!name) return;
-      const gameId = mapListSheetGameId(cols[1]);
-      if (!gameId) return;
-      const normalPrice = Number((cols[2] || "").trim()) || 0;
-      const discRaw = (cols[3] || "").trim();
-      const discountPrice = discRaw === "" ? null : (Number(discRaw) || 0);
-      const slotLabels = [cols[4], cols[5], cols[6]].map((c) => (c || "").trim()).filter(Boolean);
-      const timeSlots = Util.TIME_SLOTS.filter((t) => slotLabels.includes(t.label)).map((t) => t.key);
-      const daysRaw = (cols[7] || "").trim();
-      const needsCheck = daysRaw === Util.NEEDS_CHECK_LABEL;
-      const days = daysRaw === Util.EVERY_DAY_LABEL
-        ? Util.AVAIL_DAYS.map((d) => d.key)
-        : Util.AVAIL_DAYS.filter((d) => daysRaw.split(/[,\/\s]+/).map((x) => x.trim()).includes(d.label)).map((d) => d.key);
-      const emergencyAvailable = (cols[15] || "").trim() === Util.EMERGENCY_LABEL;
-      rows.push({ name, gameId, normalPrice, discountPrice, timeSlots, days, needsCheck, emergencyAvailable });
-    });
-    return rows;
-  }
-
-  // Applies List Streamer rows: matches streamers by name (creating new ones as needed), sets
-  // price per row's game, and merges (unions) availability across all of a streamer's rows since
-  // availability is stored per-streamer, not per-game. The sheet is treated as the source of
-  // truth for price/availability, so it fully overwrites those fields (but never touches photo
-  // or schedule data, and never touches streamers absent from this tab).
-  function applyListStreamerRows(rows) {
-    const nameToId = {};
-    state.streamers.forEach((s) => { nameToId[s.name] = s.id; });
-    let addedStreamers = 0;
-    const availByName = {};
-    rows.forEach((r) => {
-      if (!nameToId[r.name]) {
-        const created = addStreamer(r.name);
-        nameToId[r.name] = created.id;
-        addedStreamers++;
-      }
-      const sid = nameToId[r.name];
-      setPrice(sid, r.gameId, r.normalPrice, r.discountPrice);
-      if (!availByName[r.name]) availByName[r.name] = { timeSlots: new Set(), days: new Set(), needsCheck: false, emergencyAvailable: false };
-      r.timeSlots.forEach((t) => availByName[r.name].timeSlots.add(t));
-      r.days.forEach((d) => availByName[r.name].days.add(d));
-      if (r.needsCheck) availByName[r.name].needsCheck = true;
-      if (r.emergencyAvailable) availByName[r.name].emergencyAvailable = true;
-    });
-    Object.keys(availByName).forEach((name) => {
-      const sid = nameToId[name];
-      const a = availByName[name];
-      updateStreamer(sid, {
-        availability: {
-          timeSlots: Array.from(a.timeSlots),
-          days: Array.from(a.days),
-          needsCheck: a.needsCheck,
-        },
-        emergencyAvailable: a.emergencyAvailable,
-      });
-    });
-    save();
-    return { addedStreamers, updatedCount: Object.keys(availByName).length };
-  }
-
-  // Fetches the List Streamer tab from the sheet and syncs price/availability into Admin data.
-  async function syncStreamersFromSheet() {
-    const res = await fetch(sheetCsvUrl(LIST_STREAMER_GID));
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const rows = parseListStreamerCSV(text);
-    if (!rows.length) throw new Error("ไม่พบข้อมูลใน tab List Streamer");
-    return applyListStreamerRows(rows);
   }
 
   // Parses the sheet's raw CSV export into flat {date, time, gameId, streamerName, program} rows,
@@ -10364,11 +10276,11 @@ const DB = (() => {
   }
 
   // Merges streamer records pushed to Firebase (by pushStreamerToFirebase, above) into local
-  // state — adds ones this device doesn't have yet, updates ones that changed. Deliberately
-  // never removes a local streamer just because it's absent from the snapshot: since Firebase
-  // only ever contains streamers someone has actually edited through the web UI (bulk
-  // sheet-import data isn't pushed there — that already syncs via the sheet itself), an empty
-  // or partial snapshot is normal, not a sign everything else was deleted.
+  // state — adds ones this device doesn't have yet, updates ones that changed, and removes ones
+  // that are gone from the remote snapshot (every streamer, however it was created, gets pushed
+  // to Firebase — see addStreamer — so the "streamers" node is a true superset; a device missing
+  // that removal notices its Admin list quietly drift back out of sync with everyone else's,
+  // which is exactly what re-grew the duplicate/garbage list after a cleanup on one device).
   // Firebase Realtime Database silently drops empty arrays/objects on write — a streamer with
   // no time slots set (timeSlots: []) comes back from Firebase with no timeSlots key at all, not
   // an empty array. A shallow merge would then overwrite a perfectly good local record with one
@@ -10408,6 +10320,13 @@ const DB = (() => {
         changed = true;
       }
     });
+    const removedIds = state.streamers.filter((s) => !snapshotVal[s.id]).map((s) => s.id);
+    if (removedIds.length) {
+      const removedSet = new Set(removedIds);
+      state.streamers = state.streamers.filter((s) => !removedSet.has(s.id));
+      state.schedule = state.schedule.filter((e) => !removedSet.has(e.streamerId));
+      changed = true;
+    }
     if (changed) save();
     return changed;
   }
@@ -10612,7 +10531,7 @@ const DB = (() => {
     setPrice, deletePrice, getPrice, effectivePrice,
     listSchedule, listScheduleByDate, listScheduleByMonth, addScheduleEntry, updateScheduleEntry, deleteScheduleEntry, setEntryTournament,
     getDayStatus, setDayStatus, getEntryCost,
-    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncStreamersFromSheet, syncGamesFromSeed, syncPhotosFromSeed, syncBriefsFromSheet,
+    exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncGamesFromSeed, syncPhotosFromSeed, syncBriefsFromSheet,
     syncSetupFromSheet, listSetupRecords, setupGamesForStreamer,
     listenTournamentFlags, listenStreamerUpdates,
   };
@@ -11689,25 +11608,13 @@ const Summary = (() => {
       reloadBtn.disabled = true;
       reloadBtn.textContent = "กำลังโหลด...";
       const scheduleResult = await DB.syncScheduleFromSheet().catch((err) => ({ error: err }));
-      const priceResult = await DB.syncStreamersFromSheet().catch((err) => ({ error: err }));
       render(container);
-      if (scheduleResult.error && priceResult.error) {
+      if (scheduleResult.error) {
         Util.showToast("โหลดข้อมูลไม่สำเร็จ: " + scheduleResult.error.message);
         return;
       }
-      const parts = [];
-      if (!scheduleResult.error) {
-        const failedNote = scheduleResult.failedTabs && scheduleResult.failedTabs.length ? ` (ดึงไม่ได้: ${scheduleResult.failedTabs.join(", ")})` : "";
-        parts.push(`ตาราง ${scheduleResult.newCount} คิว${failedNote}`);
-      } else {
-        parts.push(`ตารางดึงไม่ได้ (${scheduleResult.error.message})`);
-      }
-      if (!priceResult.error) {
-        parts.push(`ราคาอัปเดต ${priceResult.updatedCount} คน${priceResult.addedStreamers ? `, เพิ่มใหม่ ${priceResult.addedStreamers} คน` : ""}`);
-      } else {
-        parts.push(`ราคาดึงไม่ได้ (${priceResult.error.message})`);
-      }
-      Util.showToast(`โหลดข้อมูลล่าสุดแล้ว — ${parts.join(" / ")}`);
+      const failedNote = scheduleResult.failedTabs && scheduleResult.failedTabs.length ? ` (ดึงไม่ได้: ${scheduleResult.failedTabs.join(", ")})` : "";
+      Util.showToast(`โหลดข้อมูลล่าสุดแล้ว — ตาราง ${scheduleResult.newCount} คิว${failedNote}`);
     });
   }
 
@@ -11793,7 +11700,6 @@ const Admin = (() => {
         <div class="row between">
           <h2>Streamers (${streamers.length}${filtersActive ? ` / ${allStreamers.length}` : ""})</h2>
           <div class="row" style="gap:8px;">
-            <button class="secondary small" id="sync-streamers-sheet">↻ ซิงค์ราคา/เวลาว่าง จากชีท</button>
             <button class="secondary small" id="sync-photos-seed" title="เติมรูปเริ่มต้นให้ Streamer ที่ยังไม่มีรูป (ไม่ทับรูปที่ตั้งไว้แล้ว)">↻ ซิงค์รูปเริ่มต้น</button>
             <button id="add-streamer">+ เพิ่ม Streamer</button>
           </div>
@@ -11859,20 +11765,6 @@ const Admin = (() => {
     body.querySelector("#streamer-emergency-filter").addEventListener("change", (e) => {
       state.streamerEmergencyFilter = e.target.checked;
       renderBody(body.closest("main"));
-    });
-    const syncBtn = body.querySelector("#sync-streamers-sheet");
-    syncBtn.addEventListener("click", async () => {
-      syncBtn.disabled = true;
-      syncBtn.textContent = "กำลังซิงค์...";
-      try {
-        const result = await DB.syncStreamersFromSheet();
-        renderBody(body.closest("main"));
-        Util.showToast(`ซิงค์แล้ว — อัปเดต ${result.updatedCount} คน${result.addedStreamers ? `, เพิ่มใหม่ ${result.addedStreamers} คน` : ""}`);
-      } catch (err) {
-        syncBtn.disabled = false;
-        syncBtn.textContent = "↻ ซิงค์ราคา/เวลาว่าง จากชีท";
-        alert("ซิงค์ไม่สำเร็จ: " + err.message);
-      }
     });
     const syncPhotosBtn = body.querySelector("#sync-photos-seed");
     syncPhotosBtn.addEventListener("click", async () => {
