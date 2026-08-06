@@ -10141,13 +10141,34 @@ const DB = (() => {
     return { games: [], streamers: [], schedule: [], dayStatus: {}, setupRecords: [] };
   }
 
+  // A handful of streamer records on live Firebase data have been found missing their `prices`
+  // array entirely (Firebase strips empty arrays on write, and an older code path once saved
+  // that raw shape straight into localStorage too) — anything that reads `.prices` without
+  // checking crashes the whole page. Repair any such records once on every load, whichever
+  // source they came from, so a stale corrupted snapshot can't keep crashing forever.
+  function repairStreamers() {
+    if (!state || !Array.isArray(state.streamers)) return;
+    state.streamers.forEach((s) => {
+      if (!Array.isArray(s.prices)) s.prices = [];
+      const avail = s.availability || {};
+      s.availability = {
+        timeSlots: Array.isArray(avail.timeSlots) ? avail.timeSlots : [],
+        days: Array.isArray(avail.days) ? avail.days : [],
+        needsCheck: !!avail.needsCheck,
+      };
+    });
+  }
+
   async function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       state = JSON.parse(raw);
+      repairStreamers();
+      save();
       return state;
     }
     state = typeof SEED_DATA !== "undefined" ? JSON.parse(JSON.stringify(SEED_DATA)) : defaultState();
+    repairStreamers();
     save();
     return state;
   }
@@ -10246,7 +10267,7 @@ const DB = (() => {
   }
   function getPrice(streamerId, gameId) {
     const s = getStreamer(streamerId);
-    if (!s) return null;
+    if (!s || !Array.isArray(s.prices)) return null;
     return s.prices.find((p) => p.gameId === gameId) || null;
   }
   // Effective price used for totals: discount price if set, otherwise normal price.
