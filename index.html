@@ -199,6 +199,14 @@ h3 { font-size: 14px; margin: 0 0 8px; }
 .live-card-status { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
 .live-card-status.is-live { color: var(--danger); }
 .live-card-status.is-offline { color: var(--text-dim); font-weight: 400; text-align: center; }
+.live-card-watch-hint { font-size: 10px; color: var(--text-dim); font-weight: 600; }
+.live-card.is-watching { border-color: var(--accent); border-width: 2px; background: rgba(139,94,60,0.06); }
+
+.live-embed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.live-embed-box { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-2); }
+.live-embed-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; }
+.live-embed-frame-wrap { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
+.live-embed-frame-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-dow { text-align: center; font-size: 11px; color: var(--text-dim); padding-bottom: 4px; font-weight: 600; }
@@ -385,6 +393,12 @@ details.game-summary .gs-totals { margin-left: auto; display: flex; gap: 16px; f
   .cal-cell .cal-name-item { font-size: 9px; }
   main { padding: 14px; }
   .week-grid { grid-template-columns: repeat(7, 130px); overflow-x: auto; padding-bottom: 8px; }
+  /* Viewing the current week: show only today's column (per Thailand time) for a quick,
+     single-day glance instead of 7 narrow scrolling columns. Falls back to showing the whole
+     scrollable week when a different (past/future) week is being viewed, since then no column
+     has .today and there'd otherwise be nothing to show. */
+  .week-grid:has(.week-col.today) { grid-template-columns: 1fr; overflow-x: visible; }
+  .week-grid:has(.week-col.today) .week-col:not(.today) { display: none; }
 }
 
 </style>
@@ -7632,12 +7646,20 @@ const SEED_DATA = {
                          "id":  "e540",
                          "date":  "2026-08-14",
                          "time":  "21.00 - 23.00",
+                         "gameId":  "tosm",
+                         "streamerId":  "s51",
+                         "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
+                     },
+                     {
+                         "id":  "e541",
+                         "date":  "2026-08-14",
+                         "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
                          "streamerId":  "s79",
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e541",
+                         "id":  "e542",
                          "date":  "2026-08-14",
                          "time":  "21.30 - 23.30",
                          "gameId":  "tr",
@@ -7645,7 +7667,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e542",
+                         "id":  "e543",
                          "date":  "2026-08-14",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -7653,7 +7675,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e543",
+                         "id":  "e544",
                          "date":  "2026-08-14",
                          "time":  "23.30 - 01.30",
                          "gameId":  "tosm",
@@ -7661,7 +7683,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e544",
+                         "id":  "e545",
                          "date":  "2026-08-15",
                          "time":  "14.00 - 16.00",
                          "gameId":  "tr",
@@ -7669,7 +7691,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e545",
+                         "id":  "e546",
                          "date":  "2026-08-15",
                          "time":  "14.00 - 16.00",
                          "gameId":  "warz",
@@ -7677,7 +7699,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e546",
+                         "id":  "e547",
                          "date":  "2026-08-15",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -7685,7 +7707,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e547",
+                         "id":  "e548",
                          "date":  "2026-08-15",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -7693,7 +7715,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e548",
+                         "id":  "e549",
                          "date":  "2026-08-15",
                          "time":  "18.30 - 20.30",
                          "gameId":  "tosm",
@@ -7701,7 +7723,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e549",
+                         "id":  "e550",
                          "date":  "2026-08-15",
                          "time":  "19.00 - 21.00",
                          "gameId":  "tr",
@@ -7709,7 +7731,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e550",
+                         "id":  "e551",
                          "date":  "2026-08-15",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -7717,7 +7739,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e551",
+                         "id":  "e552",
                          "date":  "2026-08-15",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -7725,7 +7747,7 @@ const SEED_DATA = {
                          "program":  "CABAL Ultimate Combo | Emerald Odyssey : [KOLs name]"
                      },
                      {
-                         "id":  "e552",
+                         "id":  "e553",
                          "date":  "2026-08-15",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -7733,7 +7755,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e553",
+                         "id":  "e554",
                          "date":  "2026-08-15",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -7741,7 +7763,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e554",
+                         "id":  "e555",
                          "date":  "2026-08-15",
                          "time":  "21.30 - 23.30",
                          "gameId":  "tr",
@@ -7749,7 +7771,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e555",
+                         "id":  "e556",
                          "date":  "2026-08-15",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -7757,7 +7779,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e556",
+                         "id":  "e557",
                          "date":  "2026-08-16",
                          "time":  "14.00 - 16.00",
                          "gameId":  "tr",
@@ -7765,7 +7787,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e557",
+                         "id":  "e558",
                          "date":  "2026-08-16",
                          "time":  "14.00 - 16.00",
                          "gameId":  "warz",
@@ -7773,7 +7795,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e558",
+                         "id":  "e559",
                          "date":  "2026-08-16",
                          "time":  "16.30 - 18.30",
                          "gameId":  "tr",
@@ -7781,7 +7803,7 @@ const SEED_DATA = {
                          "program":  "Tales Runner | Run With Dreamers : [KOLs name]"
                      },
                      {
-                         "id":  "e559",
+                         "id":  "e560",
                          "date":  "2026-08-16",
                          "time":  "16.30 - 18.30",
                          "gameId":  "warz",
@@ -7789,7 +7811,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e560",
+                         "id":  "e561",
                          "date":  "2026-08-16",
                          "time":  "19.00 - 21.00",
                          "gameId":  "warz",
@@ -7797,7 +7819,7 @@ const SEED_DATA = {
                          "program":  ""
                      },
                      {
-                         "id":  "e561",
+                         "id":  "e562",
                          "date":  "2026-08-16",
                          "time":  "20.00 - 22.00",
                          "gameId":  "cabal",
@@ -7805,7 +7827,7 @@ const SEED_DATA = {
                          "program":  "Cabal: Infinite Combo  |  Sapphire Journey : [KOLs name]"
                      },
                      {
-                         "id":  "e562",
+                         "id":  "e563",
                          "date":  "2026-08-16",
                          "time":  "21.00 - 23.00",
                          "gameId":  "tosm",
@@ -7813,7 +7835,7 @@ const SEED_DATA = {
                          "program":  "Tree of Savior M Extreme | Once Upon a day :  [KOLs name]"
                      },
                      {
-                         "id":  "e563",
+                         "id":  "e564",
                          "date":  "2026-08-16",
                          "time":  "21.00 - 23.00",
                          "gameId":  "zone4",
@@ -7821,7 +7843,7 @@ const SEED_DATA = {
                          "program":  "ZONE4 l STREET ZONE LIVE : [KOLs name]"
                      },
                      {
-                         "id":  "e564",
+                         "id":  "e565",
                          "date":  "2026-08-16",
                          "time":  "21.30 - 23.30",
                          "gameId":  "warz",
@@ -10280,13 +10302,12 @@ const Calendar = (() => {
       d.setDate(startOfWeek.getDate() + i);
       weekDates.push(d);
     }
-    // If today falls in this week, lead with it (then continue forward, wrapping the earlier
-    // days of the week to the end) so it's visible immediately without scrolling on mobile.
-    const todayIdx = weekDates.findIndex((d) => Util.toISODate(d.getFullYear(), d.getMonth() + 1, d.getDate()) === todayISO);
-    const orderedDates = todayIdx >= 0 ? [...weekDates.slice(todayIdx), ...weekDates.slice(0, todayIdx)] : weekDates;
-
+    // Always plain chronological (Sun→Sat) order — a "today-first" rotation was tried but made
+    // the day numbers look out of sequence (e.g. "8, 2, 3, 4, 5..."), which read as broken
+    // rather than helpful. On mobile, today is highlighted and scrolled into view instead (see
+    // the .week-col.today CSS / :has() rule), so quick access doesn't need reordering the dates.
     let cols = "";
-    orderedDates.forEach((d) => {
+    weekDates.forEach((d) => {
       const dateISO = Util.toISODate(d.getFullYear(), d.getMonth() + 1, d.getDate());
       const status = DB.getDayStatus(dateISO);
       const entries = dayEntriesSorted(dateISO);
@@ -10499,6 +10520,11 @@ const Calendar = (() => {
 // so it needs no API key and no per-streamer channel setup. Clicking a live card opens that
 // game's YouTube channel so you can actually watch.
 const LiveStream = (() => {
+  // Which games' live video is currently expanded below the card grid — a Set so multiple
+  // games can be watched side by side. Persists across re-renders (module-level, not inside
+  // render()) so toggling one card doesn't reset the others.
+  const activeEmbeds = new Set();
+
   function nowMinutesBangkok() {
     const parts = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false,
@@ -10576,6 +10602,7 @@ const LiveStream = (() => {
     const isLive = !!status.current;
     const entry = status.current || status.next;
     const s = entry ? DB.getStreamer(entry.streamerId) : null;
+    const isWatching = activeEmbeds.has(g.id);
 
     const avatarHtml = s ? Util.avatarHTML(s, "") : `<div class="avatar-circle">${Util.escapeHtml(gameBadgeInitials(g.name))}</div>`;
     const name = s ? s.name : g.fullName;
@@ -10585,12 +10612,9 @@ const LiveStream = (() => {
         ? `<span class="live-card-status is-offline">รอบถัดไป ${Util.escapeHtml(status.next.time)}</span>`
         : `<span class="live-card-status is-offline">ไม่มีคิววันนี้แล้ว</span>`;
 
-    const tag = g.youtubeUrl
-      ? `<a href="${Util.escapeHtml(g.youtubeUrl)}" target="_blank" rel="noopener" class="live-card ${isLive ? "is-live" : "is-offline"}">`
-      : `<div class="live-card ${isLive ? "is-live" : "is-offline"}">`;
-    const closeTag = g.youtubeUrl ? "</a>" : "</div>";
-
-    return `${tag}
+    // Cards toggle an inline video below (data-toggle-embed) instead of linking out to
+    // YouTube, so multiple games' streams can be watched side by side on this same page.
+    return `<div class="live-card ${isLive ? "is-live" : "is-offline"} ${isWatching ? "is-watching" : ""}" data-toggle-embed="${g.id}" role="button" tabindex="0">
       <span class="live-card-game-name" style="background:${g.color};">${Util.escapeHtml(g.name)}</span>
       <div class="live-card-avatar-wrap">
         ${avatarHtml}
@@ -10599,7 +10623,21 @@ const LiveStream = (() => {
       </div>
       <div class="live-card-name">${Util.escapeHtml(name)}</div>
       ${statusLine}
-    ${closeTag}`;
+      <span class="live-card-watch-hint">${isWatching ? "▲ ปิดวิดีโอ" : "▼ ดูสด"}</span>
+    </div>`;
+  }
+
+  function renderEmbed(g) {
+    const src = `https://www.youtube.com/embed/live_stream?channel=${encodeURIComponent(g.channelId)}&autoplay=1&mute=1`;
+    return `<div class="live-embed-box">
+      <div class="live-embed-header">
+        <span class="live-card-game-name" style="background:${g.color};">${Util.escapeHtml(g.name)}</span>
+        <button class="secondary small" data-close-embed="${g.id}">✕ ปิด</button>
+      </div>
+      <div class="live-embed-frame-wrap">
+        <iframe src="${src}" title="${Util.escapeHtml(g.fullName)} live" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>`;
   }
 
   // Order the Brief boxes exactly as requested: TalesRunner, WarZ, TOSM, Zone4, Cabal —
@@ -10644,19 +10682,28 @@ const LiveStream = (() => {
     allGames.forEach((g) => { if (!orderedForBrief.includes(g)) orderedForBrief.push(g); });
     const briefBoxes = orderedForBrief.map((g) => renderBriefBox(g)).join("");
 
+    const watchingGames = withChannel.filter((g) => activeEmbeds.has(g.id));
+    const embedsSection = watchingGames.length
+      ? `<div class="card">
+          <h2>▶️ กำลังดู (${watchingGames.length})</h2>
+          <div class="live-embed-grid">${watchingGames.map((g) => renderEmbed(g)).join("")}</div>
+        </div>`
+      : "";
+
     container.innerHTML = `
       <div class="card">
         <div class="row between">
           <h2>📡 ไลฟ์สดตอนนี้</h2>
           <button class="secondary small" id="live-refresh-all">🔄 รีเฟรช</button>
         </div>
-        <p style="color:var(--text-dim);font-size:12px;">อิงจากตารางไลฟ์ — ใครมีคิวอยู่ ณ ตอนนี้จะขึ้นสถานะ LIVE ให้อัตโนมัติ กดที่การ์ดเพื่อดูสด</p>
+        <p style="color:var(--text-dim);font-size:12px;">อิงจากตารางไลฟ์ — ใครมีคิวอยู่ ณ ตอนนี้จะขึ้นสถานะ LIVE ให้อัตโนมัติ กดที่การ์ดเพื่อดูสด (เลือกได้หลายเกมพร้อมกัน)</p>
       </div>
       <div class="card">
         <h2>📋 Brief</h2>
         <div class="brief-box-grid">${briefBoxes}</div>
       </div>
       ${withChannel.length ? `<div class="card"><div class="live-card-grid">${cards}</div></div>` : `<div class="card empty-state">ยังไม่ได้ตั้ง Channel ID ให้เกมไหนเลย — ไปตั้งได้ที่หลังบ้าน &gt; เกม</div>`}
+      ${embedsSection}
       ${missing.length ? `<div class="card">
         <p style="color:var(--text-dim);font-size:12px;margin-bottom:10px;">ยังไม่ได้ตั้ง Channel ID: ${missing.map((g) => Util.escapeHtml(g.name)).join(", ")} — ไปตั้งได้ที่หลังบ้าน &gt; เกม หรือลองซิงค์ค่าเริ่มต้นก่อน</p>
         <button class="secondary small" id="live-sync-games">↻ ซิงค์ Channel ID เริ่มต้น</button>
@@ -10667,6 +10714,20 @@ const LiveStream = (() => {
       render(container);
       Util.showToast("รีเฟรชแล้ว");
     });
+    container.querySelectorAll("[data-toggle-embed]").forEach((card) => {
+      const toggle = () => {
+        const gameId = card.getAttribute("data-toggle-embed");
+        if (activeEmbeds.has(gameId)) activeEmbeds.delete(gameId);
+        else activeEmbeds.add(gameId);
+        render(container, { skipAutoSync: true });
+      };
+      card.addEventListener("click", toggle);
+      card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    });
+    container.querySelectorAll("[data-close-embed]").forEach((btn) => btn.addEventListener("click", () => {
+      activeEmbeds.delete(btn.getAttribute("data-close-embed"));
+      render(container, { skipAutoSync: true });
+    }));
     const syncBtn = container.querySelector("#live-sync-games");
     if (syncBtn) syncBtn.addEventListener("click", async () => {
       syncBtn.disabled = true;
@@ -11246,16 +11307,7 @@ const Admin = (() => {
       return true;
     });
     const filtersActive = searchLower || state.streamerGameFilter || state.streamerTimeFilter || state.streamerEmergencyFilter;
-    const emergencyStreamers = allStreamers.filter((s) => s.emergencyAvailable);
     body.innerHTML = `
-      <div class="card">
-        <h2>🚨 สตรีมเมอร์ที่ Set ฉุกเฉินได้ (${emergencyStreamers.length})</h2>
-        <p style="color:var(--text-dim);font-size:12px;margin-top:-4px;">อิงจากคอลัมน์ท้ายสุดของ tab List Streamer ในชีท</p>
-        ${emergencyStreamers.length
-          ? `<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px;">${emergencyStreamers.map((s) => `<span class="badge" style="background:var(--danger);">${Util.escapeHtml(s.name)}</span>`).join("")}</div>`
-          : `<div class="empty-state">ยังไม่มีใครถูกระบุว่าฉุกเฉินได้</div>`}
-      </div>
-
       <div class="card">
         <div class="row between">
           <h2>Streamers (${streamers.length}${filtersActive ? ` / ${allStreamers.length}` : ""})</h2>
@@ -11405,7 +11457,7 @@ const Admin = (() => {
 
   function dayCell(s) {
     const avail = s.availability || { timeSlots: [], days: [], needsCheck: false };
-    const checkBadge = avail.needsCheck ? `<span class="badge" style="background:var(--warning);color:white;margin-right:3px;">❓ ต้องเช็ค</span>` : "";
+    const checkBadge = avail.needsCheck ? `<span class="badge" style="background:#3b82f6;color:white;margin-right:3px;">❓ ต้องเช็ค</span>` : "";
     if (!avail.days.length) return checkBadge || `<span style="color:var(--text-dim);font-size:12px;">—</span>`;
     const dayBadges = Util.AVAIL_DAYS.map((d) => {
       const isAvail = avail.days.includes(d.key);
@@ -11560,8 +11612,9 @@ const Admin = (() => {
     }));
     editor.querySelector("#save-streamer").addEventListener("click", () => {
       commitDraft(editor);
-      Util.showToast("บันทึกแล้ว — Dashboard และหน้าสรุปอัปเดตอัตโนมัติ");
+      state.editingStreamerId = null;
       renderBody(body.closest("main"));
+      Util.showToast("บันทึกแล้ว — Dashboard และหน้าสรุปอัปเดตอัตโนมัติ");
     });
   }
 
