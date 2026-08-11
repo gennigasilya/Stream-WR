@@ -224,15 +224,21 @@ const DB = (() => {
   function getStreamer(id) {
     return state.streamers.find((s) => s.id === id);
   }
-  // Pushes one streamer's full record to Firebase (keyed by its stable id) so an edit made in
-  // the web Admin UI — as opposed to the sheet-import sync, which already reaches every device
-  // via the sheet itself — shows up for everyone else in real time too. Fire-and-forget: never
-  // blocks the local save, and no-ops entirely if Firebase didn't load.
+  // Pushes one streamer's full record to the server (keyed by its stable id), which relays it
+  // to Firebase via the Admin SDK — so an edit made in the web Admin UI — as opposed to the
+  // sheet-import sync, which already reaches every device via the sheet itself — shows up for
+  // everyone else within one polling cycle too. Fire-and-forget: never blocks the local save.
+  // Requires an authenticated session; silently no-ops (via .catch) if not logged in, same as
+  // it silently no-op'd before when Firebase hadn't loaded.
   function pushStreamerToFirebase(streamerId) {
-    if (!fbDb) return;
     const s = getStreamer(streamerId);
     if (!s) return;
-    fbDb.ref("streamers/" + streamerId).set(s).catch(() => {});
+    fetch("/api/streamers/" + encodeURIComponent(streamerId), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(s),
+    }).catch(() => {});
   }
 
   function addStreamer(name) {
@@ -253,7 +259,7 @@ const DB = (() => {
     state.streamers = state.streamers.filter((s) => s.id !== id);
     state.schedule = state.schedule.filter((e) => e.streamerId !== id);
     save();
-    if (fbDb) fbDb.ref("streamers/" + id).remove().catch(() => {});
+    fetch("/api/streamers/" + encodeURIComponent(id), { method: "DELETE", credentials: "include" }).catch(() => {});
   }
 
   // ---------- Prices (per streamer, per game) ----------
@@ -333,10 +339,15 @@ const DB = (() => {
     if (!e) return;
     e.isTournament = isTournament;
     save();
-    if (fbDb) {
-      const s = getStreamer(e.streamerId);
-      if (s) fbDb.ref("tournamentFlags/" + fbTournamentKey(e.date, e.time, e.gameId, s.name)).set(isTournament).catch(() => {});
-    }
+    const s = getStreamer(e.streamerId);
+    if (!s) return;
+    const key = fbTournamentKey(e.date, e.time, e.gameId, s.name);
+    fetch("/api/tournament-flags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ key, value: isTournament }),
+    }).catch(() => {});
   }
 
   // Overlays Firebase's tournament flags (the cross-device source of truth) onto the current
@@ -358,18 +369,30 @@ const DB = (() => {
     return changed;
   }
 
+  const POLL_INTERVAL_MS = 20000;
   let tournamentListenerAttached = false;
-  // Subscribes to live tournament-flag changes from any device; onChange is called (with no
+  // Used to sync live tournament-flag changes from any device; onChange is called (with no
   // args) whenever something actually changed, so the caller can re-render. Safe to call
-  // multiple times — only attaches once. No-ops entirely if Firebase didn't load.
+  // multiple times — only attaches once. Polls the server instead of a live Firebase
+  // subscription now that the browser can't reach Firebase directly (see server/index.js) —
+  // near-real-time (within one interval) rather than instant. A 401 (not logged in) just skips
+  // this cycle silently and tries again next interval, so logging in later self-heals it
+  // without a page reload.
   function listenTournamentFlags(onChange) {
-    if (!fbDb || tournamentListenerAttached) return;
+    if (tournamentListenerAttached) return;
     tournamentListenerAttached = true;
-    fbDb.ref("tournamentFlags").on("value", (snap) => {
-      lastTournamentSnapshot = snap.val();
-      const changed = applyTournamentFlagsFromSnapshot(lastTournamentSnapshot);
-      if (changed && typeof onChange === "function") onChange();
-    });
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/tournament-flags", { credentials: "include" });
+        if (!res.ok) return;
+        const { flags } = await res.json();
+        lastTournamentSnapshot = flags;
+        const changed = applyTournamentFlagsFromSnapshot(flags);
+        if (changed && typeof onChange === "function") onChange();
+      } catch (e) {}
+    };
+    poll();
+    setInterval(poll, POLL_INTERVAL_MS);
   }
 
   // Merges streamer records pushed to Firebase (by pushStreamerToFirebase, above) into local
@@ -429,13 +452,21 @@ const DB = (() => {
   }
 
   let streamerListenerAttached = false;
+  // Same polling approach as listenTournamentFlags, and the same reasoning applies.
   function listenStreamerUpdates(onChange) {
-    if (!fbDb || streamerListenerAttached) return;
+    if (streamerListenerAttached) return;
     streamerListenerAttached = true;
-    fbDb.ref("streamers").on("value", (snap) => {
-      const changed = applyStreamersFromSnapshot(snap.val());
-      if (changed && typeof onChange === "function") onChange();
-    });
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/streamers", { credentials: "include" });
+        if (!res.ok) return;
+        const { streamers } = await res.json();
+        const changed = applyStreamersFromSnapshot(streamers);
+        if (changed && typeof onChange === "function") onChange();
+      } catch (e) {}
+    };
+    poll();
+    setInterval(poll, POLL_INTERVAL_MS);
   }
 
   // ---------- Day status: normal | no_live (whole day cancelled) ----------
