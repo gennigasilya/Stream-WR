@@ -108,7 +108,17 @@ async function fetchTabAsCsv(gid) {
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "..", "streamer-manager")));
+// The client files ended up flattened into this same directory as the server source (a GitHub
+// web-upload quirk, not intentional) — express.static(__dirname) would work, but it would also
+// serve index.js, package.json, hash-password.js etc. straight to any visitor, which defeats
+// the whole point of moving the sheet ID and gids server-side. Serve only the specific
+// client-facing paths instead; everything else 404s.
+["css", "js", "data"].forEach((dir) => {
+  app.use("/" + dir, express.static(path.join(__dirname, dir)));
+});
+app.get(["/", "/index.html"], (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 // ---------------- Auth ----------------
 // The password itself is only ever compared here, server-side, via bcrypt — the browser sends
@@ -180,7 +190,7 @@ app.get("/api/sheet/setup", async (req, res) => {
 // Hash-based client routing (#dashboard, #admin, ...) never hits the server on navigation, so
 // this is just a safety net for a direct/bookmarked load.
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "streamer-manager", "index.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.listen(PORT, () => {
