@@ -27,9 +27,6 @@ try {
 } catch (e) {
   console.error("ADMIN_USERS env var is not valid JSON — no one will be able to log in until it's fixed.");
 }
-// TEMPORARY diagnostic — remove once login is confirmed working. Logs only the count and each
-// email (never the hash), so this is safe to leave in Railway's log output briefly.
-console.log("ADMIN_USERS loaded:", ADMIN_USERS.length, "account(s) —", ADMIN_USERS.map((u) => u.email));
 
 // The sheet ID and per-tab gids used to live in the shipped client JS (js/db.js), readable by
 // anyone who opened the page source. They live only here now — the browser never sees them,
@@ -163,6 +160,36 @@ const loginLimiter = rateLimit({
 // have real accounts without ever seeing a different error message.
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
+// The IP-based limiter above turned out unreliable in production: Railway's proxy layer doesn't
+// hand this process a consistent client IP request-to-request (ratelimit-remaining was observed
+// jumping around non-monotonically instead of counting down), so a determined attacker could get
+// far more than 10 real guesses in per 15 minutes. This tracks failed attempts per submitted
+// email/account instead — the thing actually worth protecting — so it locks out regardless of
+// which apparent IP the guesses come from. Capped in size since the key is attacker-controlled.
+const failedAttemptsByEmail = new Map();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
+
+function isLockedOut(email) {
+  const entry = failedAttemptsByEmail.get(email);
+  if (!entry) return false;
+  if (Date.now() - entry.firstAttempt > LOCKOUT_WINDOW_MS) {
+    failedAttemptsByEmail.delete(email);
+    return false;
+  }
+  return entry.count >= MAX_FAILED_ATTEMPTS;
+}
+
+function recordFailedAttempt(email) {
+  if (failedAttemptsByEmail.size > 500) failedAttemptsByEmail.clear();
+  const entry = failedAttemptsByEmail.get(email);
+  if (!entry || Date.now() - entry.firstAttempt > LOCKOUT_WINDOW_MS) {
+    failedAttemptsByEmail.set(email, { count: 1, firstAttempt: Date.now() });
+  } else {
+    entry.count += 1;
+  }
+}
+
 // The password itself is only ever compared here, server-side, via bcrypt — the browser sends
 // the plain password once over HTTPS and gets back either a session cookie or a 401. It never
 // receives the hash, and the hash is never reachable from any client-facing route.
@@ -178,9 +205,17 @@ app.post("/api/login", loginLimiter, async (req, res) => {
     if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
       return res.status(400).json({ error: "missing email/password" });
     }
-    const user = ADMIN_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const normalizedEmail = email.toLowerCase();
+    if (isLockedOut(normalizedEmail)) {
+      return res.status(429).json({ error: "บัญชีนี้ถูกล็อกชั่วคราวจากการพยายามเข้าสู่ระบบผิดหลายครั้ง กรุณารอสักครู่แล้วลองใหม่" });
+    }
+    const user = ADMIN_USERS.find((u) => u.email.toLowerCase() === normalizedEmail);
     const ok = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
-    if (!user || !ok) return res.status(401).json({ error: "invalid credentials" });
+    if (!user || !ok) {
+      recordFailedAttempt(normalizedEmail);
+      return res.status(401).json({ error: "invalid credentials" });
+    }
+    failedAttemptsByEmail.delete(normalizedEmail);
     const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: `${SESSION_HOURS}h` });
     res.cookie("session", token, {
       httpOnly: true,
