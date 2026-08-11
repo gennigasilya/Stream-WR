@@ -161,9 +161,8 @@ app.post("/api/login", loginLimiter, async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: "missing email/password" });
   const user = ADMIN_USERS.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
-  if (!user) return res.status(401).json({ error: "invalid credentials" });
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(401).json({ error: "invalid credentials" });
+  const ok = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
+  if (!user || !ok) return res.status(401).json({ error: "invalid credentials" });
   const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: `${SESSION_HOURS}h` });
   res.cookie("session", token, {
     httpOnly: true,
