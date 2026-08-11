@@ -1,5 +1,14 @@
 (async function () {
   await DB.load();
+  // data/seed.json (DB.load()'s bootstrap fallback) is gated behind login now, so a
+  // not-logged-in first-time visitor gets an empty state back from it — without this, Dashboard
+  // and Live would render blank until the background sync 3 minutes below first fires. Synced
+  // eagerly here instead, from the public sheet endpoint, so first paint has real schedule data
+  // regardless of login state. Best-effort: a failure here just leaves state as DB.load() found
+  // it, same as the periodic sync's own failure handling further down.
+  try {
+    await DB.syncScheduleFromSheet();
+  } catch (e) {}
   await Auth.init();
 
   const app = document.getElementById("app");
@@ -54,9 +63,10 @@
   window.addEventListener("hashchange", router);
   router();
 
-  // Live cross-device tournament-flag updates (see js/firebase-init.js) — re-render whatever
-  // page is currently open whenever someone (this device or another) toggles a tournament flag,
-  // so Dashboard and the cost totals it feeds into Summary stay correct for everyone watching.
+  // Cross-device tournament-flag updates (polled via server/index.js's Firebase-backed
+  // endpoints — see js/db.js) — re-render whatever page is currently open whenever someone
+  // (this device or another) toggles a tournament flag, so Dashboard and the cost totals it
+  // feeds into Summary stay correct for everyone watching.
   DB.listenTournamentFlags(() => router());
   // Same idea for streamer edits made through the Admin UI (name, price, availability, photo,
   // emergency status) — so other team members see them live too, not just after a manual sheet sync.
