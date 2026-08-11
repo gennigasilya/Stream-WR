@@ -177,14 +177,34 @@ app.use(helmet({
 // going straight from the browser to Firebase, so the limit here has to clear that same bar.
 app.use(express.json({ limit: "2mb" }));
 app.use(cookieParser());
+
+// Defined here (rather than down by the routes that originally needed it) so the static
+// handler below can use it too — data/seed.json turned out to be exactly the kind of thing
+// this gate exists for: a teammate found it sitting at /data/seed.json, publicly fetchable,
+// containing a full bundled export of every streamer's name AND price (the same data the
+// Firebase-backed /api/streamers endpoint above requires login for). Bundled as an offline/
+// first-paint fallback long before today's lockdown, it was never revisited when the rest of
+// this data got gated — same class of gap as the root index.html found earlier.
+function requireAuth(req, res, next) {
+  const token = req.cookies && req.cookies.session;
+  if (!token) return res.status(401).json({ error: "unauthorized" });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (e) {
+    res.status(401).json({ error: "unauthorized" });
+  }
+}
+
 // The client files ended up flattened into this same directory as the server source (a GitHub
 // web-upload quirk, not intentional) — express.static(__dirname) would work, but it would also
 // serve index.js, package.json, hash-password.js etc. straight to any visitor, which defeats
 // the whole point of moving the sheet ID and gids server-side. Serve only the specific
 // client-facing paths instead; everything else 404s.
-["css", "js", "data"].forEach((dir) => {
+["css", "js"].forEach((dir) => {
   app.use("/" + dir, express.static(path.join(__dirname, dir)));
 });
+app.use("/data", requireAuth, express.static(path.join(__dirname, "data")));
 app.get(["/", "/index.html"], (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
@@ -293,24 +313,8 @@ app.get("/api/session", (req, res) => {
   }
 });
 
-// Gate for everything below: streamer records (names, prices, availability) and tournament
-// flags used to be readable/writable by anyone who had the Firebase databaseURL — which was
-// itself sitting in plain sight in a public JS file — with no login involved at all. Requiring
-// the same session cookie /api/login already issues closes that off consistently with the rest
-// of the app, at the cost of the public Dashboard/Live/Setup pages no longer showing live
-// streamer data unless someone's logged in on that browser (an explicit tradeoff, not a bug).
-function requireAuth(req, res, next) {
-  const token = req.cookies && req.cookies.session;
-  if (!token) return res.status(401).json({ error: "unauthorized" });
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch (e) {
-    res.status(401).json({ error: "unauthorized" });
-  }
-}
-
 // ---------------- Streamers / tournament flags (Firebase, via Admin SDK) ----------------
+// requireAuth is defined earlier (above the static file serving) since /data needs it too.
 // The Admin SDK bypasses Firebase's security rules entirely (it authenticates as a trusted
 // service account, not a rules-checked client), which is exactly why the browser can no longer
 // be allowed to talk to Firebase directly — locking the rules down only means something if
