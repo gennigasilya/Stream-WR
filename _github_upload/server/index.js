@@ -7,6 +7,8 @@ const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { JWT: GoogleJWT } = require("google-auth-library");
+const { initializeApp: initFirebaseApp, cert: firebaseCert } = require("firebase-admin/app");
+const { getDatabase: getFirebaseDatabase } = require("firebase-admin/database");
 
 const app = express();
 app.disable("x-powered-by");
@@ -57,6 +59,48 @@ try {
   }
 } catch (e) {
   console.error("GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON — sheet sync will fail until it's fixed.");
+}
+
+// FIREBASE_SERVICE_ACCOUNT_JSON env var: the full JSON key downloaded from Firebase Console
+// (Project settings > Service accounts > Generate new private key). Streamer records and
+// tournament-flag data used to sync straight from the browser to Firebase with wide-open rules
+// (anyone with the databaseURL — public in js/firebase-init.js — could read or write all of it,
+// no login required). The browser no longer talks to Firebase directly at all; only this server
+// does, via the Admin SDK, which bypasses security rules entirely — so the rules themselves get
+// locked to deny direct client access (see server/README.md) and everything routes through the
+// /api/streamers and /api/tournament-flags endpoints below instead, gated by requireAuth.
+let FIREBASE_SERVICE_ACCOUNT = null;
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    FIREBASE_SERVICE_ACCOUNT = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  }
+} catch (e) {
+  console.error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON — streamer/tournament sync will fail until it's fixed.");
+}
+const FIREBASE_DATABASE_URL = process.env.FIREBASE_DATABASE_URL || "";
+
+// initializeApp/cert() throw synchronously on a malformed key — getFirebaseDb() itself catches
+// that (rather than leaving it to each call site) after the login endpoint taught us the hard
+// way that a synchronous throw inside an async Express 4 handler, uncaught, takes the whole
+// process down. Returns null on any failure so every caller's existing "not configured" path
+// handles it the same as FIREBASE_SERVICE_ACCOUNT_JSON simply being unset.
+let firebaseApp = null;
+let firebaseInitFailed = false;
+function getFirebaseDb() {
+  if (!FIREBASE_SERVICE_ACCOUNT || !FIREBASE_DATABASE_URL || firebaseInitFailed) return null;
+  try {
+    if (!firebaseApp) {
+      firebaseApp = initFirebaseApp({
+        credential: firebaseCert(FIREBASE_SERVICE_ACCOUNT),
+        databaseURL: FIREBASE_DATABASE_URL,
+      });
+    }
+    return getFirebaseDatabase(firebaseApp);
+  } catch (e) {
+    console.error("Firebase Admin SDK failed to initialize:", e.message);
+    firebaseInitFailed = true;
+    return null;
+  }
 }
 
 let googleAuthClient = null;
@@ -113,21 +157,25 @@ async function fetchTabAsCsv(gid) {
 // original protocol via X-Forwarded-Proto — trust proxy makes Express's req.secure reflect that
 // real value instead of always reading false, which matters for the cookie's Secure flag below.
 app.set("trust proxy", 1);
-// Helmet's strict defaults broke two things a live check caught: streamer photos (admins paste
-// arbitrary photo URLs — Google Drive links, anywhere — so img-src needs any https: source, not
-// just 'self'/data:) and Firebase (loaded from gstatic.com's CDN, then talks to its realtime
-// backend over its own domains for the live cross-device sync elsewhere in this app).
+// Helmet's strict defaults broke streamer photos (admins paste arbitrary photo URLs — Google
+// Drive links, anywhere — so img-src needs any https: source, not just 'self'/data:). Firebase
+// used to need its own script-src/connect-src allowances here too (the browser talked to it
+// directly), but streamer/tournament data now only ever passes through this server's own API —
+// the browser has no reason to reach gstatic.com or *.firebaseio.com/*.firebasedatabase.app
+// anymore, so those were removed rather than left as unused attack surface.
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
       "img-src": ["'self'", "data:", "https:"],
-      "script-src": ["'self'", "https://www.gstatic.com"],
-      "connect-src": ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://*.firebasedatabase.app", "wss://*.firebaseio.com", "wss://*.firebasedatabase.app"],
     },
   },
 }));
-app.use(express.json());
+// Default 100kb body limit is fine for everything except a streamer's photo field — util.js
+// caps a resized upload's data URL at 1.5MB before rejecting it client-side, and that whole
+// streamer record (photo included) now round-trips through PUT /api/streamers/:id instead of
+// going straight from the browser to Firebase, so the limit here has to clear that same bar.
+app.use(express.json({ limit: "2mb" }));
 app.use(cookieParser());
 // The client files ended up flattened into this same directory as the server source (a GitHub
 // web-upload quirk, not intentional) — express.static(__dirname) would work, but it would also
@@ -242,6 +290,86 @@ app.get("/api/session", (req, res) => {
     res.json({ authed: true, email: payload.email });
   } catch (e) {
     res.json({ authed: false });
+  }
+});
+
+// Gate for everything below: streamer records (names, prices, availability) and tournament
+// flags used to be readable/writable by anyone who had the Firebase databaseURL — which was
+// itself sitting in plain sight in a public JS file — with no login involved at all. Requiring
+// the same session cookie /api/login already issues closes that off consistently with the rest
+// of the app, at the cost of the public Dashboard/Live/Setup pages no longer showing live
+// streamer data unless someone's logged in on that browser (an explicit tradeoff, not a bug).
+function requireAuth(req, res, next) {
+  const token = req.cookies && req.cookies.session;
+  if (!token) return res.status(401).json({ error: "unauthorized" });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (e) {
+    res.status(401).json({ error: "unauthorized" });
+  }
+}
+
+// ---------------- Streamers / tournament flags (Firebase, via Admin SDK) ----------------
+// The Admin SDK bypasses Firebase's security rules entirely (it authenticates as a trusted
+// service account, not a rules-checked client), which is exactly why the browser can no longer
+// be allowed to talk to Firebase directly — locking the rules down only means something if
+// there's a single, auditable path left that can still get through them.
+app.get("/api/streamers", requireAuth, async (req, res) => {
+  const db = getFirebaseDb();
+  if (!db) return res.status(500).json({ error: "Firebase not configured" });
+  try {
+    const snap = await db.ref("streamers").once("value");
+    res.json({ streamers: snap.val() });
+  } catch (e) {
+    res.status(502).json({ error: "failed to read streamers" });
+  }
+});
+
+app.put("/api/streamers/:id", requireAuth, async (req, res) => {
+  const db = getFirebaseDb();
+  if (!db) return res.status(500).json({ error: "Firebase not configured" });
+  if (!req.body || typeof req.body !== "object") return res.status(400).json({ error: "invalid body" });
+  try {
+    await db.ref("streamers/" + req.params.id).set(req.body);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(502).json({ error: "failed to write streamer" });
+  }
+});
+
+app.delete("/api/streamers/:id", requireAuth, async (req, res) => {
+  const db = getFirebaseDb();
+  if (!db) return res.status(500).json({ error: "Firebase not configured" });
+  try {
+    await db.ref("streamers/" + req.params.id).remove();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(502).json({ error: "failed to delete streamer" });
+  }
+});
+
+app.get("/api/tournament-flags", requireAuth, async (req, res) => {
+  const db = getFirebaseDb();
+  if (!db) return res.status(500).json({ error: "Firebase not configured" });
+  try {
+    const snap = await db.ref("tournamentFlags").once("value");
+    res.json({ flags: snap.val() });
+  } catch (e) {
+    res.status(502).json({ error: "failed to read tournament flags" });
+  }
+});
+
+app.post("/api/tournament-flags", requireAuth, async (req, res) => {
+  const db = getFirebaseDb();
+  if (!db) return res.status(500).json({ error: "Firebase not configured" });
+  const { key, value } = req.body || {};
+  if (typeof key !== "string" || !key) return res.status(400).json({ error: "missing key" });
+  try {
+    await db.ref("tournamentFlags/" + key).set(!!value);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(502).json({ error: "failed to write tournament flag" });
   }
 });
 
