@@ -163,20 +163,32 @@ const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 // The password itself is only ever compared here, server-side, via bcrypt — the browser sends
 // the plain password once over HTTPS and gets back either a session cookie or a 401. It never
 // receives the hash, and the hash is never reachable from any client-facing route.
+//
+// A live check against this deployment sent {"password":{"$ne":null}} instead of a string and
+// it took the whole site down: bcrypt.compare() throws on a non-string input, that throw becomes
+// an unhandled promise rejection inside this async handler (Express 4 does not catch those on
+// its own), and the process crashed — repeatable by anyone, no login required. Fixed with an
+// explicit typeof check up front and a try/catch as a second layer underneath it.
 app.post("/api/login", loginLimiter, async (req, res) => {
-  const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: "missing email/password" });
-  const user = ADMIN_USERS.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
-  const ok = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
-  if (!user || !ok) return res.status(401).json({ error: "invalid credentials" });
-  const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: `${SESSION_HOURS}h` });
-  res.cookie("session", token, {
-    httpOnly: true,
-    secure: req.secure,
-    sameSite: "lax",
-    maxAge: SESSION_HOURS * 60 * 60 * 1000,
-  });
-  res.json({ ok: true, email: user.email });
+  try {
+    const { email, password } = req.body || {};
+    if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
+      return res.status(400).json({ error: "missing email/password" });
+    }
+    const user = ADMIN_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const ok = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
+    if (!user || !ok) return res.status(401).json({ error: "invalid credentials" });
+    const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: `${SESSION_HOURS}h` });
+    res.cookie("session", token, {
+      httpOnly: true,
+      secure: req.secure,
+      sameSite: "lax",
+      maxAge: SESSION_HOURS * 60 * 60 * 1000,
+    });
+    res.json({ ok: true, email: user.email });
+  } catch (e) {
+    res.status(400).json({ error: "invalid request" });
+  }
 });
 
 app.post("/api/logout", (req, res) => {
@@ -229,6 +241,14 @@ app.get("/api/sheet/setup", async (req, res) => {
 // this is just a safety net for a direct/bookmarked load.
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// Last-resort net for any route that throws unexpectedly (must be defined last, with all 4
+// args, or Express won't treat it as an error handler) — the /api/login crash above is exactly
+// the kind of bug this exists to contain if it ever happens somewhere else instead.
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "internal server error" });
 });
 
 app.listen(PORT, () => {
