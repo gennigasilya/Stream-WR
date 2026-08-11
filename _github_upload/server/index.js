@@ -154,6 +154,12 @@ const loginLimiter = rateLimit({
   message: { error: "พยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่" },
 });
 
+// A dummy hash to compare against when the email isn't found, purely so bcrypt.compare's ~100ms
+// cost is paid on that path too — otherwise "no such user" returns near-instantly while "wrong
+// password" takes noticeably longer, and that timing gap alone lets someone map out which emails
+// have real accounts without ever seeing a different error message.
+const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
+
 // The password itself is only ever compared here, server-side, via bcrypt — the browser sends
 // the plain password once over HTTPS and gets back either a session cookie or a 401. It never
 // receives the hash, and the hash is never reachable from any client-facing route.
