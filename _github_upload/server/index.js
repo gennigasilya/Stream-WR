@@ -27,6 +27,9 @@ try {
 } catch (e) {
   console.error("ADMIN_USERS env var is not valid JSON — no one will be able to log in until it's fixed.");
 }
+// TEMPORARY diagnostic — remove once login is confirmed working. Logs only the count and each
+// email (never the hash), so this is safe to leave in Railway's log output briefly.
+console.log("ADMIN_USERS loaded:", ADMIN_USERS.length, "account(s) —", ADMIN_USERS.map((u) => u.email));
 
 // The sheet ID and per-tab gids used to live in the shipped client JS (js/db.js), readable by
 // anyone who opened the page source. They live only here now — the browser never sees them,
