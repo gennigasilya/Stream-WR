@@ -174,9 +174,14 @@ const DB = (() => {
       save();
       return state;
     }
+    // data/seed.json is now gated behind login (see server/index.js) — an unauthenticated
+    // first-time visitor gets a 401 here, not a network error, so this has to check res.ok
+    // itself rather than relying on fetch() to throw. Falling through to defaultState() is
+    // correct either way: app.js runs an immediate schedule sync right after load() that
+    // populates real (public) schedule data from the sheet regardless of login state.
     try {
-      const res = await fetch("data/seed.json");
-      state = await res.json();
+      const res = await fetch("data/seed.json", { credentials: "include" });
+      state = res.ok ? await res.json() : defaultState();
     } catch (e) {
       state = defaultState();
     }
