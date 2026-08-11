@@ -4,9 +4,12 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const { JWT: GoogleJWT } = require("google-auth-library");
 
 const app = express();
+app.disable("x-powered-by");
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const SESSION_HOURS = 12;
@@ -106,6 +109,24 @@ async function fetchTabAsCsv(gid) {
   return rowsToCsv(res.data.values || []);
 }
 
+// Railway terminates TLS at its edge and forwards internally over plain HTTP, tagging the
+// original protocol via X-Forwarded-Proto — trust proxy makes Express's req.secure reflect that
+// real value instead of always reading false, which matters for the cookie's Secure flag below.
+app.set("trust proxy", 1);
+// Helmet's strict defaults broke two things a live check caught: streamer photos (admins paste
+// arbitrary photo URLs — Google Drive links, anywhere — so img-src needs any https: source, not
+// just 'self'/data:) and Firebase (loaded from gstatic.com's CDN, then talks to its realtime
+// backend over its own domains for the live cross-device sync elsewhere in this app).
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "img-src": ["'self'", "data:", "https:"],
+      "script-src": ["'self'", "https://www.gstatic.com"],
+      "connect-src": ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://*.firebasedatabase.app", "wss://*.firebaseio.com", "wss://*.firebasedatabase.app"],
+    },
+  },
+}));
 app.use(express.json());
 app.use(cookieParser());
 // The client files ended up flattened into this same directory as the server source (a GitHub
@@ -121,10 +142,22 @@ app.get(["/", "/index.html"], (req, res) => {
 });
 
 // ---------------- Auth ----------------
+// 10 rapid guesses against a short password (see the "CDM" discussion) went through completely
+// unthrottled during a review of this deployment — every one hit bcrypt.compare with no penalty.
+// Capped at 10 attempts per 15 minutes per IP; deliberately counts every attempt (not just
+// failures) so it can't be reset by pausing between guesses.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "พยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่" },
+});
+
 // The password itself is only ever compared here, server-side, via bcrypt — the browser sends
 // the plain password once over HTTPS and gets back either a session cookie or a 401. It never
 // receives the hash, and the hash is never reachable from any client-facing route.
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", loginLimiter, async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: "missing email/password" });
   const user = ADMIN_USERS.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
@@ -134,7 +167,7 @@ app.post("/api/login", async (req, res) => {
   const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: `${SESSION_HOURS}h` });
   res.cookie("session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: req.secure,
     sameSite: "lax",
     maxAge: SESSION_HOURS * 60 * 60 * 1000,
   });
