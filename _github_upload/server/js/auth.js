@@ -74,6 +74,9 @@ const Auth = (() => {
         const data = await res.json();
         authed = true;
         userEmail = data.email || null;
+        // Pulls real streamer/tournament data immediately instead of leaving the page to wait
+        // on the next background poll (up to 20s away) — see DB.refreshAfterLogin's comment.
+        await DB.refreshAfterLogin();
         onSuccess();
       } catch (e) {
         submitBtn.disabled = false;
