@@ -661,6 +661,26 @@ const DB = (() => {
     return { ...applied, failedTabs: allFailed };
   }
 
+  // Locking down /api/streamers and /data/seed.json server-side doesn't retroactively clear
+  // what a browser already cached in localStorage before that happened, or from a session that
+  // was logged in — DB.load() reads the cache straight back with no re-check against the
+  // server, so a device that ever synced real prices/photos keeps them around indefinitely,
+  // even after logging out. Called right after we learn we're NOT authenticated (app.js, at
+  // boot and right after logout) to clear that out on this device going forward. Keeps
+  // id/name — those already come from the public Sheet-driven schedule sync (KOL names are
+  // typed straight into the sheet, so they were never the secret) — and clears only the fields
+  // that are actually gated behind login.
+  function stripSensitiveStreamerFields() {
+    if (!state || !Array.isArray(state.streamers)) return;
+    state.streamers.forEach((s) => {
+      s.photo = null;
+      s.prices = [];
+      s.availability = { timeSlots: [], days: [], needsCheck: false };
+      s.emergencyAvailable = false;
+    });
+    save();
+  }
+
   return {
     load, save, get, uid,
     listGames, getGame, addGame, updateGame,
@@ -670,6 +690,6 @@ const DB = (() => {
     getDayStatus, setDayStatus, getEntryCost,
     exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncGamesFromSeed, syncPhotosFromSeed,
     syncSetupFromSheet, listSetupRecords, setupGamesForStreamer,
-    listenTournamentFlags, listenStreamerUpdates,
+    listenTournamentFlags, listenStreamerUpdates, stripSensitiveStreamerFields,
   };
 })();
