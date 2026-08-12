@@ -10,6 +10,11 @@
     await DB.syncScheduleFromSheet();
   } catch (e) {}
   await Auth.init();
+  // A device that ever cached real prices/photos in localStorage (before today's lockdown, or
+  // from a session that was logged in) would otherwise keep showing them forever, even after
+  // logging out — DB.load() trusts the cache with no server re-check. Strip it here, the moment
+  // we know for sure this browser isn't authenticated, before the first router() call below.
+  if (!Auth.isAuthed()) DB.stripSensitiveStreamerFields();
 
   const app = document.getElementById("app");
 
@@ -56,6 +61,7 @@
   logoutLink.addEventListener("click", async (e) => {
     e.preventDefault();
     await Auth.logout();
+    DB.stripSensitiveStreamerFields();
     location.hash = "#dashboard";
     router();
   });
