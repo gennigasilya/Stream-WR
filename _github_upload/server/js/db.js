@@ -661,6 +661,31 @@ const DB = (() => {
     return { ...applied, failedTabs: allFailed };
   }
 
+  // Logging in happens through Auth.renderLogin's in-page form, not a page reload — the
+  // background pollers above were already running from boot (started while logged out, so
+  // every tick until now just 401'd and skipped), and the next one could be up to
+  // POLL_INTERVAL_MS away. Without this, an admin who just logged in and landed on their own
+  // Streamers table would see 179 names with every price/availability field still blank for up
+  // to 20 seconds — indistinguishable from data loss. Called once, right after login succeeds
+  // (see js/auth.js), to pull both endpoints immediately instead of waiting on the next tick.
+  async function refreshAfterLogin() {
+    try {
+      const res = await fetch("/api/streamers", { credentials: "include" });
+      if (res.ok) {
+        const { streamers } = await res.json();
+        applyStreamersFromSnapshot(streamers);
+      }
+    } catch (e) {}
+    try {
+      const res = await fetch("/api/tournament-flags", { credentials: "include" });
+      if (res.ok) {
+        const { flags } = await res.json();
+        lastTournamentSnapshot = flags;
+        applyTournamentFlagsFromSnapshot(flags);
+      }
+    } catch (e) {}
+  }
+
   // Locking down /api/streamers and /data/seed.json server-side doesn't retroactively clear
   // what a browser already cached in localStorage before that happened, or from a session that
   // was logged in — DB.load() reads the cache straight back with no re-check against the
@@ -690,6 +715,6 @@ const DB = (() => {
     getDayStatus, setDayStatus, getEntryCost,
     exportJSON, importJSON, resetToSeed, syncScheduleFromSeed, syncScheduleFromSheet, syncGamesFromSeed, syncPhotosFromSeed,
     syncSetupFromSheet, listSetupRecords, setupGamesForStreamer,
-    listenTournamentFlags, listenStreamerUpdates, stripSensitiveStreamerFields,
+    listenTournamentFlags, listenStreamerUpdates, stripSensitiveStreamerFields, refreshAfterLogin,
   };
 })();
