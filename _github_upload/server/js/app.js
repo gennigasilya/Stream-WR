@@ -10,11 +10,21 @@
     await DB.syncScheduleFromSheet();
   } catch (e) {}
   await Auth.init();
-  // A device that ever cached real prices/photos in localStorage (before today's lockdown, or
-  // from a session that was logged in) would otherwise keep showing them forever, even after
-  // logging out — DB.load() trusts the cache with no server re-check. Strip it here, the moment
-  // we know for sure this browser isn't authenticated, before the first router() call below.
-  if (!Auth.isAuthed()) DB.stripSensitiveStreamerFields();
+  // Two cache-staleness cases, handled before the first router() call below so neither one
+  // ever flashes on screen:
+  // - Authenticated (e.g. a reload with a still-valid session cookie): the local cache could be
+  //   whatever a previous logged-out visit last stripped it down to (see stripSensitiveStreamerFields
+  //   below) — DB.listenStreamerUpdates()'s own poll would eventually fix this on its own, but only
+  //   after firing once in the background post-render, so the first paint would show it empty.
+  //   Pull fresh data now instead, same as right after a form login.
+  // - Not authenticated: a device that ever cached real prices/photos in localStorage (before
+  //   today's lockdown, or from a session that was logged in) would otherwise keep showing them
+  //   forever, even after logging out — DB.load() trusts the cache with no server re-check.
+  if (Auth.isAuthed()) {
+    await DB.refreshAfterLogin();
+  } else {
+    DB.stripSensitiveStreamerFields();
+  }
 
   const app = document.getElementById("app");
 
